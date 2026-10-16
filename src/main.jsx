@@ -1,10 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { LockKeyhole, ArrowDownToLine, ArrowLeftRight, Bell, BellOff, Check, ChevronRight, CircleHelp, CreditCard, Eye, EyeOff, FileText, Home as HomeIcon, Menu, Moon, MoreHorizontal, Plus, QrCode, Search, Settings, ShieldCheck, Sun, TrendingUp, User, Wallet, X } from 'lucide-react';
+import { LockKeyhole, ArrowDownToLine, ArrowLeftRight, Bell, BellOff, Check, ChevronRight, CircleHelp, Copy, CreditCard, Eye, EyeOff, FileText, Home as HomeIcon, Menu, Moon, MoreHorizontal, Plus, QrCode, RotateCcw, Search, Settings, ShieldCheck, Sun, TrendingUp, Truck, User, Wallet, X } from 'lucide-react';
 import './styles.css';
 
 const money = (n) => `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const accountNumber = () => String(Math.floor(1000000000 + Math.random() * 8999999999));
+// Clearly fictional demo-only card and bank identifiers. Never use these for real payments.
+const DEMO_CARD_NUMBER = '5312448899003711';
+const DEMO_CARD_EXPIRY = '08/29';
+const DEMO_CARD_CVV = '482';
+const DEMO_ROUTING_NUMBER = '000000000';
+const DEMO_SWIFT_CODE = 'AETHUS33XXX';
 const id = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 const navigation = [
@@ -50,6 +56,7 @@ function App() {
   const [drawer, setDrawer] = useState(false);
   const [hideBalance, setHideBalance] = useState(false);
   const [message, setMessage] = useState('');
+  const [physicalFrozen, setPhysicalFrozen] = useState(false);
 
   const total = member.checking + member.savings;
   const cardSpend = useMemo(() => transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0), [transactions]);
@@ -88,7 +95,7 @@ function App() {
   const register = (name) => {
     if (!name.trim()) return flash('Enter the member name.');
     const newMember = { id: id(), name: name.trim(), accountNumber: accountNumber(), checking: 0, savings: 0 };
-    const nextMembers = [...members, newMember]; setMembers(nextMembers); save(member, nextMembers, transactions); setModal(null); flash(`Account created: ${newMember.accountNumber}`);
+    const nextMembers = [...members, newMember]; setMembers(nextMembers); save(member, nextMembers, transactions); setModal(null); flash(`Account created ending ${newMember.accountNumber.slice(-4)}.`);
   };
 
   return <div className={`app ${theme}`}>
@@ -112,7 +119,7 @@ function App() {
       </footer>
 
       {drawer && <Drawer close={() => setDrawer(false)} page={page} setPage={setPage} settings={() => { setDrawer(false); setModal('settings'); }} />}
-      {modal && <Modal type={modal} close={() => setModal(null)} member={member} members={members} addMoney={addMoney} transfer={transfer} debit={debit} register={register} theme={theme} changeTheme={changeTheme} notifications={notifications} changeNotifications={changeNotifications} transactions={transactions} />}
+      {modal && <Modal type={modal} close={() => setModal(null)} open={setModal} member={member} members={members} addMoney={addMoney} transfer={transfer} debit={debit} register={register} theme={theme} changeTheme={changeTheme} notifications={notifications} changeNotifications={changeNotifications} transactions={transactions} flash={flash} physicalFrozen={physicalFrozen} setPhysicalFrozen={setPhysicalFrozen} />}
       {message && <div className="toast"><Check size={17} />{message}</div>}
     </div>
   </div>;
@@ -125,11 +132,12 @@ function Home({ member, show, total, hideBalance, setHideBalance, cardSpend, tra
       <div className="divider" />
       <div className="balance-row"><div><p>Savings</p><small>Available to save</small></div><strong>{show(member.savings)}</strong></div>
       <div className="card-row">
-        <div className="bank-card"><div className="mini-brand"><span>AE</span>AetherBank</div><div className="chip" /><div className="contactless">⌁</div><div className="card-name">{member.name}</div><div className="last-four">•••• {member.accountNumber.slice(-4)}</div><div className="card-dots"><i /><i /></div></div>
+        <div className="bank-card"><div className="mini-brand"><span>AE</span>AetherBank</div><div className="chip" /><div className="contactless">⌁</div><div className="card-name">{member.name}</div><div className="last-four">•••• {DEMO_CARD_NUMBER.slice(-4)}</div><div className="card-dots"><i /><i /></div></div>
         <div className="spend"><span>Recent Card Spend</span><b>{show(cardSpend)}</b><div className="progress"><i style={{ width: `${Math.min(100, cardSpend / 30)}%` }} /></div><small>Available: {show(member.checking)}</small></div>
       </div>
-      <div className="account-line"><ShieldCheck size={14} /> Account number <b>{member.accountNumber}</b></div>
+      <div className="account-line"><ShieldCheck size={14} /> Account <b>••••{member.accountNumber.slice(-5)}</b></div>
     </section>
+    <button className="account-details-link" onClick={() => open('account-details')}><span><ShieldCheck size={17}/><span><b>Account Details</b><small>Routing, account and bank information</small></span></span><ChevronRight size={18}/></button>
 
     <div className="total-line"><span>Total balance</span><strong>{show(total)}</strong><button onClick={() => setHideBalance(!hideBalance)}>{hideBalance ? <Eye size={17} /> : <EyeOff size={17} />}</button></div>
 
@@ -145,22 +153,25 @@ function Payments({ open, transactions }) { return <Page title="Payments" subtit
 function Feature({ icon: Icon, title, text, click }) { return <button className="feature" onClick={click}><span><Icon size={22} /></span><div><b>{title}</b><p>{text}</p></div><ChevronRight size={18} /></button>; }
 function Investments({ open }) { return <Page title="Investments" subtitle="Track your portfolio and future wealth."><div className="investment-card"><small>PORTFOLIO VALUE</small><strong>$0.00</strong><div><TrendingUp size={18} /> 0.00% today</div></div><div className="panel"><div className="section-heading"><h2>Watchlist</h2><button onClick={() => open('invest')}>Manage</button></div><div className="watch-row"><span>Aether Index</span><b>$0.00</b><small>0.00%</small></div><div className="watch-row"><span>Aether Bond</span><b>$0.00</b><small>0.00%</small></div></div></Page>; }
 function Support({ flash }) { return <Page title="Support" subtitle="Help with your account and banking services."><div className="support-hero"><div className="support-orb"><CircleHelp size={28} /></div><div><b>AetherBank Support</b><p>Find answers or contact support for account help.</p></div></div>{['How do I register a member?', 'How do internal transfers work?', 'How do I change my theme?', 'How do I manage my card?'].map(q => <button className="list-item" key={q} onClick={() => flash('Support information opened.')}>{q}<ChevronRight size={18} /></button>)}<button className="primary-button" onClick={() => flash('Support request started.')}>Contact Support</button></Page>; }
-function Profile({ member, theme, changeTheme, notifications, changeNotifications, open }) { return <Page title="Profile" subtitle="Your AetherBank account and preferences."><div className="profile-card"><div className="avatar">AE</div><div><b>{member.name}</b><p>Account {member.accountNumber}</p></div><ShieldCheck size={20} /></div><div className="panel"><button className="settings-row" onClick={() => open('settings')}><span><Settings size={19} /> Settings</span><ChevronRight size={18} /></button><button className="settings-row" onClick={() => changeNotifications(!notifications)}><span>{notifications ? <Bell size={19} /> : <BellOff size={19} />} Notifications</span><em>{notifications ? 'On' : 'Off'}</em></button><div className="theme-choice"><span>Theme</span><div><button className={theme === 'light' ? 'selected' : ''} onClick={() => changeTheme('light')}><Sun size={16} /> Light</button><button className={theme === 'dark' ? 'selected' : ''} onClick={() => changeTheme('dark')}><Moon size={16} /> Dark</button></div></div></div><div className="security-box"><ShieldCheck size={20} /><div><b>Account Security</b><p>Identity, account and payment controls are managed from your secure banking profile.</p></div></div></Page>; }
+function Profile({ member, theme, changeTheme, notifications, changeNotifications, open }) { return <Page title="Profile" subtitle="Your AetherBank account and preferences."><div className="profile-card"><div className="avatar">AE</div><div><b>{member.name}</b><p>Account ••••{member.accountNumber.slice(-5)}</p></div><ShieldCheck size={20} /></div><div className="panel"><button className="settings-row" onClick={() => open('settings')}><span><Settings size={19} /> Settings</span><ChevronRight size={18} /></button><button className="settings-row" onClick={() => changeNotifications(!notifications)}><span>{notifications ? <Bell size={19} /> : <BellOff size={19} />} Notifications</span><em>{notifications ? 'On' : 'Off'}</em></button><div className="theme-choice"><span>Theme</span><div><button className={theme === 'light' ? 'selected' : ''} onClick={() => changeTheme('light')}><Sun size={16} /> Light</button><button className={theme === 'dark' ? 'selected' : ''} onClick={() => changeTheme('dark')}><Moon size={16} /> Dark</button></div></div></div><div className="security-box"><ShieldCheck size={20} /><div><b>Account Security</b><p>Identity, account and payment controls are managed from your secure banking profile.</p></div></div></Page>; }
 function Drawer({ close, setPage, settings }) { return <div className="drawer-backdrop" onClick={close}><aside className="drawer" onClick={e => e.stopPropagation()}><div className="drawer-head"><div className="brand"><span className="brand-mark">AE</span><strong>AetherBank</strong></div><button className="icon-button" onClick={close}><X size={22} /></button></div><p className="drawer-label">BANKING</p>{navigation.map(([key, label, Icon]) => <button className="drawer-link" key={key} onClick={() => { setPage(key); close(); }}><Icon size={19} />{label}<ChevronRight size={16} /></button>)}<p className="drawer-label">ACCOUNT</p><button className="drawer-link" onClick={settings}><Settings size={19} />Settings<ChevronRight size={16} /></button></aside></div>; }
 
-function Modal({ type, close, member, members, addMoney, transfer, debit, register, theme, changeTheme, notifications, changeNotifications, transactions, flash }) {
+function Modal({ type, close, open, member, members, addMoney, transfer, debit, register, theme, changeTheme, notifications, changeNotifications, transactions, flash, physicalFrozen, setPhysicalFrozen }) {
   const [amount, setAmount] = useState(''); const [recipient, setRecipient] = useState(''); const [name, setName] = useState(''); const [payee, setPayee] = useState('Utility bill');
   const [bankSearch, setBankSearch] = useState(''); const [selectedBank, setSelectedBank] = useState(''); const [recipientName, setRecipientName] = useState(''); const [accountLast4, setAccountLast4] = useState(''); const [reviewTransfer, setReviewTransfer] = useState(false);
   const [settingsExpanded, setSettingsExpanded] = useState('Account preferences');
+  const [cardTab, setCardTab] = useState('virtual');
+  const [showVirtualDetails, setShowVirtualDetails] = useState(false);
+  const copyValue = async (value, label) => { try { await navigator.clipboard.writeText(value); flash(`${label} copied.`); } catch { flash('Clipboard access is unavailable in this browser.'); } };
   const [settingsPrefs, setSettingsPrefs] = useState({ currency: 'USD ($)', timezone: 'Eastern Time (ET)', dateFormat: 'MM/DD/YYYY', dailyLimit: '2500', paperless: true, marketing: false });
   const updateSettings = (key, value) => setSettingsPrefs(current => ({ ...current, [key]: value }));
-  const titles = { add: 'Add Money', transfer: 'Transfer to a US bank', withdraw: 'Withdraw', pay: 'Pay Bills', cards: 'AetherBank Card', scan: 'Scan to Pay', register: 'Register Member', settings: 'Settings', transactions: 'Transactions', invest: 'Watchlist' };
+  const titles = { add: 'Add Money', transfer: 'Transfer to a US bank', withdraw: 'Withdraw', pay: 'Pay Bills', cards: 'Card Management', 'virtual-card-details': 'Virtual Card Details', 'physical-card-details': 'Physical Card Details', 'account-details': 'Account Details', scan: 'Scan to Pay', register: 'Register Member', settings: 'Settings', transactions: 'Transactions', invest: 'Watchlist' };
   const submit = () => { if (type === 'add') addMoney(Number(amount)); else if (type === 'transfer') transfer(Number(amount), recipient); else if (type === 'withdraw') debit(Number(amount), 'ATM withdrawal'); else if (type === 'pay') debit(Number(amount), payee); else if (type === 'scan') debit(Number(amount), 'QR payment'); else if (type === 'register') register(name); };
   return <div className="modal-backdrop" onClick={close}><section className="modal" onClick={e => e.stopPropagation()}><div className="modal-head"><div><small>AETHERBANK</small><h2>{titles[type]}</h2></div><button className="icon-button" onClick={close}><X size={21} /></button></div>
     {type === 'settings' && <div className="settings-details">
       <div className="settings-intro"><div className="settings-icon"><Settings size={22} /></div><div><b>Account settings</b><p>Manage preferences, account information and protection.</p></div></div>
       <section className="settings-group"><div className="settings-group-title"><User size={18}/><div><b>Personal information</b><small>Details saved in this browser</small></div></div>
-        <div className="settings-detail"><span>Full name</span><b>{member.name}</b></div><div className="settings-detail"><span>Account number</span><b>{member.accountNumber}</b></div><div className="settings-detail"><span>Email address</span><b className="settings-muted">Not provided</b></div><div className="settings-detail"><span>Phone number</span><b className="settings-muted">Not provided</b></div>
+        <div className="settings-detail"><span>Full name</span><b>{member.name}</b></div><div className="settings-detail"><span>Account number</span><b>••••{member.accountNumber.slice(-5)}</b></div><div className="settings-detail"><span>Email address</span><b className="settings-muted">Not provided</b></div><div className="settings-detail"><span>Phone number</span><b className="settings-muted">Not provided</b></div>
       </section>
       <section className="settings-group"><div className="settings-group-title"><Wallet size={18}/><div><b>Account details</b><small>Account overview and currency</small></div></div>
         <div className="settings-detail"><span>Account type</span><b>Personal checking</b></div><div className="settings-detail"><span>Checking balance</span><b>{money(member.checking)}</b></div><div className="settings-detail"><span>Savings balance</span><b>{money(member.savings)}</b></div><div className="settings-detail"><span>Display currency</span><b>USD · US Dollar ($)</b></div><div className="settings-detail"><span>Routing number</span><b className="settings-muted">Not configured</b></div><p className="settings-footnote">This interface is not connected to a real financial institution.</p>
@@ -203,7 +214,47 @@ function Modal({ type, close, member, members, addMoney, transfer, debit, regist
       </>}
     </>}
     {(type === 'add' || type === 'withdraw' || type === 'pay' || type === 'scan') && <><label>Amount</label><div className="amount-field"><span>$</span><input autoFocus inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} placeholder="0.00" /></div>{type === 'pay' && <><label>Payee</label><input className="text-input" value={payee} onChange={e => setPayee(e.target.value)} /></>}{type === 'scan' && <div className="qr-placeholder"><QrCode size={82} /><b>Scan to Pay</b><span>Point your camera at a payment QR code.</span></div>}<button className="primary-button" onClick={submit}>{type === 'add' ? 'Add Money' : type === 'withdraw' ? 'Withdraw' : 'Continue'}</button></>}
-    {type === 'cards' && <><div className="modal-card"><div className="mini-brand"><span>AE</span>AetherBank</div><div className="chip" /><div className="contactless">⌁</div><b>{member.name}</b><small>•••• {member.accountNumber.slice(-4)}</small></div><div className="info-row"><span>Card status</span><b className="positive-text">Active</b></div><div className="info-row"><span>Available</span><b>{money(member.checking)}</b></div><button className="primary-button" onClick={close}>Done</button></>}
+    {type === 'account-details' && <div className="account-details-content">
+      <div className="bank-flow-note"><ShieldCheck size={18}/><span><b>Private account information</b><small>Demo values only. AetherBank is not connected to a real bank; do not use these details for transfers.</small></span></div>
+      <div className="account-detail-row"><span>Account type</span><b>Personal Checking</b></div>
+      <div className="copy-detail-row"><div><span>Account number</span><b>{member.accountNumber}</b></div><button onClick={() => copyValue(member.accountNumber, 'Account number')}><Copy size={15}/> Copy</button></div>
+      <div className="copy-detail-row"><div><span>Routing number (ABA format)</span><b>{DEMO_ROUTING_NUMBER}</b></div><button onClick={() => copyValue(DEMO_ROUTING_NUMBER, 'Routing number')}><Copy size={15}/> Copy</button></div>
+      <div className="account-detail-row"><span>Bank name</span><b>AetherBank (fictional demo)</b></div>
+      <div className="account-detail-row"><span>SWIFT / BIC</span><b>{DEMO_SWIFT_CODE}</b></div>
+      <p className="settings-footnote">The routing number and SWIFT code are illustrative placeholders, not valid payment instructions.</p>
+      <button className="primary-button" onClick={close}>Done</button>
+    </div>}
+    {type === 'cards' && <div className="card-management">
+      <div className="segmented card-tabs" role="tablist" aria-label="Card type"><button role="tab" aria-selected={cardTab === 'virtual'} className={cardTab === 'virtual' ? 'selected' : ''} onClick={() => setCardTab('virtual')}>Virtual Card</button><button role="tab" aria-selected={cardTab === 'physical'} className={cardTab === 'physical' ? 'selected' : ''} onClick={() => setCardTab('physical')}>Physical Card</button></div>
+      {cardTab === 'virtual' ? <section className="card-management-section">
+        <button className="managed-card-preview virtual-card-preview" onClick={() => open('virtual-card-details')} aria-label="Open virtual card details"><span className="card-preview-top"><span className="mini-brand"><span>AE</span>AetherBank</span><span className="card-type-pill">VIRTUAL</span></span><span className="chip"/><span className="contactless">⌁</span><b>{member.name}</b><small>•••• {DEMO_CARD_NUMBER.slice(-4)}</small><span className="card-preview-hint">Tap to manage details <ChevronRight size={14}/></span></button>
+        <div className="info-row"><span>Card status</span><b className="positive-text">Active · Demo</b></div>
+        <button className="secondary-button card-action-button" onClick={() => setShowVirtualDetails(!showVirtualDetails)}>{showVirtualDetails ? <EyeOff size={16}/> : <Eye size={16}/>} {showVirtualDetails ? 'Hide Card Details' : 'Show Card Details'}</button>
+        {showVirtualDetails && <div className="revealed-card-details"><div><span>Card number</span><b>{DEMO_CARD_NUMBER.replace(/(.{4})/g, '$1 ').trim()}</b></div><div><span>Expiration</span><b>{DEMO_CARD_EXPIRY}</b></div><div><span>CVV</span><b>{DEMO_CARD_CVV}</b></div></div>}
+        <p className="settings-footnote">Fictional demo card details only. This card cannot be used to make payments.</p>
+      </section> : <section className="card-management-section">
+        <button className="managed-card-preview physical-card-preview" onClick={() => open('physical-card-details')} aria-label="Open physical card details"><span className="card-preview-top"><span className="mini-brand"><span>AE</span>AetherBank</span><span className="card-type-pill">PHYSICAL</span></span><span className="chip"/><span className="contactless">⌁</span><b>{member.name}</b><small>•••• {DEMO_CARD_NUMBER.slice(-4)}</small><span className="card-preview-hint">Tap to manage card <ChevronRight size={14}/></span></button>
+        <div className="info-row"><span>Delivery status</span><b>Not ordered · Demo</b></div>
+        <button className="setting-line card-switch-line" onClick={() => setPhysicalFrozen(!physicalFrozen)}><span><span><b>{physicalFrozen ? 'Card frozen' : 'Card active'}</b><small>{physicalFrozen ? 'Demo purchases are marked as blocked' : 'Freeze this demo card if needed'}</small></span></span><span className={`switch ${physicalFrozen ? 'on' : ''}`}><i/></span></button>
+        <button className="secondary-button card-action-button" onClick={() => flash('PIN reset is unavailable in this demo. No PIN was changed.')}><RotateCcw size={16}/> Reset PIN</button>
+        <p className="settings-footnote">Card freeze and PIN controls are simulated locally and do not affect a real card.</p>
+      </section>}
+      <button className="primary-button" onClick={close}>Done</button>
+    </div>}
+    {type === 'virtual-card-details' && <div className="card-detail-modal">
+      <div className="managed-card-preview virtual-card-preview detail-card-preview"><span className="card-preview-top"><span className="mini-brand"><span>AE</span>AetherBank</span><span className="card-type-pill">VIRTUAL</span></span><span className="chip"/><span className="contactless">⌁</span><b>{member.name}</b><small>•••• {DEMO_CARD_NUMBER.slice(-4)}</small></div>
+      <div className="info-row"><span>Card status</span><b className="positive-text">Active · Demo</b></div>
+      <button className="secondary-button card-action-button" onClick={() => setShowVirtualDetails(!showVirtualDetails)}>{showVirtualDetails ? <EyeOff size={16}/> : <Eye size={16}/>} {showVirtualDetails ? 'Hide Card Details' : 'Show Card Details'}</button>
+      {showVirtualDetails && <div className="revealed-card-details"><div><span>Card number</span><b>{DEMO_CARD_NUMBER.replace(/(.{4})/g, '$1 ').trim()}</b></div><div><span>Expiration</span><b>{DEMO_CARD_EXPIRY}</b></div><div><span>CVV</span><b>{DEMO_CARD_CVV}</b></div></div>}
+      <p className="settings-footnote">Fictional demo details only. No real card is issued or connected.</p><button className="primary-button" onClick={close}>Done</button>
+    </div>}
+    {type === 'physical-card-details' && <div className="card-detail-modal">
+      <div className="managed-card-preview physical-card-preview detail-card-preview"><span className="card-preview-top"><span className="mini-brand"><span>AE</span>AetherBank</span><span className="card-type-pill">PHYSICAL</span></span><span className="chip"/><span className="contactless">⌁</span><b>{member.name}</b><small>•••• {DEMO_CARD_NUMBER.slice(-4)}</small></div>
+      <div className="info-row"><span>Delivery status</span><b>Not ordered · Demo</b></div>
+      <button className="setting-line card-switch-line" onClick={() => setPhysicalFrozen(!physicalFrozen)}><span><span><b>{physicalFrozen ? 'Card frozen' : 'Card active'}</b><small>{physicalFrozen ? 'Demo purchases are marked as blocked' : 'Freeze this demo card if needed'}</small></span></span><span className={`switch ${physicalFrozen ? 'on' : ''}`}><i/></span></button>
+      <button className="secondary-button card-action-button" onClick={() => flash('PIN reset is unavailable in this demo. No PIN was changed.')}><RotateCcw size={16}/> Reset PIN</button>
+      <p className="settings-footnote">Freeze and PIN controls are simulated locally. No real card is affected.</p><button className="primary-button" onClick={close}>Done</button>
+    </div>}
     {type === 'transactions' && <>{transactions.length ? transactions.map(t => <Transaction key={t.id} item={t} />) : <div className="empty"><b>No transactions yet</b></div>}<button className="primary-button" onClick={close}>Close</button></>}
     {type === 'invest' && <><div className="watch-row"><span>Aether Index</span><b>$0.00</b><small>0.00%</small></div><div className="watch-row"><span>Aether Bond</span><b>$0.00</b><small>0.00%</small></div><button className="primary-button" onClick={close}>Done</button></>}
   </section></div>;
