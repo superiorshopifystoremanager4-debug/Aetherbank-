@@ -95,7 +95,7 @@ function App() {
   const register = (name) => {
     if (!name.trim()) return flash('Enter the member name.');
     const newMember = { id: id(), name: name.trim(), accountNumber: accountNumber(), checking: 0, savings: 0 };
-    const nextMembers = [...members, newMember]; setMembers(nextMembers); save(member, nextMembers, transactions); setModal(null); flash(`Account created: ${newMember.accountNumber}`);
+    const nextMembers = [...members, newMember]; setMembers(nextMembers); save(member, nextMembers, transactions); setModal(null); flash(`Account created ending ${newMember.accountNumber.slice(-4)}.`);
   };
 
   return <div className={`app ${theme}`}>
