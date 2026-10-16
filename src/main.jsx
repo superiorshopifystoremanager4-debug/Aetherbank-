@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { LockKeyhole, ArrowDownToLine, ArrowLeftRight, Bell, BellOff, Check, ChevronRight, CircleHelp, CreditCard, Eye, EyeOff, FileText, Home as HomeIcon, Menu, Moon, MoreHorizontal, Plus, QrCode, Search, Settings, ShieldCheck, Sun, TrendingUp, User, Wallet, X } from 'lucide-react';
+import { LockKeyhole, ArrowDownToLine, ArrowLeftRight, Bell, BellOff, Check, ChevronRight, CircleHelp, CreditCard, Download, Eye, EyeOff, FileText, Home as HomeIcon, Menu, Moon, MoreHorizontal, Plus, QrCode, Search, Settings, ShieldCheck, Sun, TrendingUp, User, Wallet, X } from 'lucide-react';
 import './styles.css';
 
 const money = (n) => `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -151,9 +151,34 @@ function Drawer({ close, setPage, settings }) { return <div className="drawer-ba
 function Modal({ type, close, member, members, addMoney, transfer, debit, register, theme, changeTheme, notifications, changeNotifications, transactions, flash }) {
   const [amount, setAmount] = useState(''); const [recipient, setRecipient] = useState(''); const [name, setName] = useState(''); const [payee, setPayee] = useState('Utility bill');
   const [bankSearch, setBankSearch] = useState(''); const [selectedBank, setSelectedBank] = useState(''); const [recipientName, setRecipientName] = useState(''); const [accountLast4, setAccountLast4] = useState(''); const [reviewTransfer, setReviewTransfer] = useState(false);
+  const [transactionSearch, setTransactionSearch] = useState(''); const [transactionFilter, setTransactionFilter] = useState('all'); const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [settingsExpanded, setSettingsExpanded] = useState('Account preferences');
   const [settingsPrefs, setSettingsPrefs] = useState({ currency: 'USD ($)', timezone: 'Eastern Time (ET)', dateFormat: 'MM/DD/YYYY', dailyLimit: '2500', paperless: true, marketing: false });
   const updateSettings = (key, value) => setSettingsPrefs(current => ({ ...current, [key]: value }));
+  const exportActivity = () => {
+    const escapeCsv = (value) => '"' + String(value ?? '').replace(/"/g, '""') + '"';
+    const rows = [
+      ['Date', 'Name', 'Description', 'Amount (USD)', 'Type', 'Reference'],
+      ...transactions.map(t => [
+        t.date || 'Date unavailable',
+        t.merchant || 'Account activity',
+        t.note || '',
+        Number(t.amount || 0).toFixed(2),
+        Number(t.amount || 0) > 0 ? 'Money in' : Number(t.amount || 0) < 0 ? 'Money out' : 'Other',
+        String(t.id || '').slice(-12)
+      ])
+    ];
+    const csv = rows.map(row => row.map(escapeCsv).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8;' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'aetherbank-activity.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    if (flash) flash('Activity CSV downloaded from this prototype.');
+  };
   const titles = { add: 'Add Money', transfer: 'Transfer to a US bank', withdraw: 'Withdraw', pay: 'Pay Bills', cards: 'AetherBank Card', scan: 'Scan to Pay', register: 'Register Member', settings: 'Settings', transactions: 'Transactions', invest: 'Watchlist' };
   const submit = () => { if (type === 'add') addMoney(Number(amount)); else if (type === 'transfer') transfer(Number(amount), recipient); else if (type === 'withdraw') debit(Number(amount), 'ATM withdrawal'); else if (type === 'pay') debit(Number(amount), payee); else if (type === 'scan') debit(Number(amount), 'QR payment'); else if (type === 'register') register(name); };
   return <div className="modal-backdrop" onClick={close}><section className="modal" onClick={e => e.stopPropagation()}><div className="modal-head"><div><small>AETHERBANK</small><h2>{titles[type]}</h2></div><button className="icon-button" onClick={close}><X size={21} /></button></div>
@@ -204,7 +229,20 @@ function Modal({ type, close, member, members, addMoney, transfer, debit, regist
     </>}
     {(type === 'add' || type === 'withdraw' || type === 'pay' || type === 'scan') && <><label>Amount</label><div className="amount-field"><span>$</span><input autoFocus inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.]/g, ''))} placeholder="0.00" /></div>{type === 'pay' && <><label>Payee</label><input className="text-input" value={payee} onChange={e => setPayee(e.target.value)} /></>}{type === 'scan' && <div className="qr-placeholder"><QrCode size={82} /><b>Scan to Pay</b><span>Point your camera at a payment QR code.</span></div>}<button className="primary-button" onClick={submit}>{type === 'add' ? 'Add Money' : type === 'withdraw' ? 'Withdraw' : 'Continue'}</button></>}
     {type === 'cards' && <><div className="modal-card"><div className="mini-brand"><span>AE</span>AetherBank</div><div className="chip" /><div className="contactless">⌁</div><b>{member.name}</b><small>•••• {member.accountNumber.slice(-4)}</small></div><div className="info-row"><span>Card status</span><b className="positive-text">Active</b></div><div className="info-row"><span>Available</span><b>{money(member.checking)}</b></div><button className="primary-button" onClick={close}>Done</button></>}
-    {type === 'transactions' && <>{transactions.length ? transactions.map(t => <Transaction key={t.id} item={t} />) : <div className="empty"><b>No transactions yet</b></div>}<button className="primary-button" onClick={close}>Close</button></>}
+    {type === 'transactions' && <>
+      {selectedTransaction ? <>
+        <button className="transaction-back" onClick={() => setSelectedTransaction(null)}>← All transactions</button>
+        <div className="transaction-detail-card"><div className={`transaction-detail-icon ${selectedTransaction.amount > 0 ? 'positive' : ''}`}>{selectedTransaction.amount > 0 ? <Plus size={22}/> : <CreditCard size={22}/>}</div><h3>{selectedTransaction.merchant}</h3><strong className={selectedTransaction.amount > 0 ? 'positive-text' : ''}>{selectedTransaction.amount > 0 ? '+' : '−'}{money(Math.abs(selectedTransaction.amount))}</strong><span className="transaction-status">Recorded in this prototype</span></div>
+        <div className="transaction-detail-rows"><div className="info-row"><span>Type</span><b>{selectedTransaction.amount > 0 ? 'Money in' : 'Money out'}</b></div><div className="info-row"><span>Description</span><b>{selectedTransaction.note || 'Account activity'}</b></div><div className="info-row"><span>Date</span><b>{selectedTransaction.date || 'Date unavailable'}</b></div><div className="info-row"><span>Reference</span><b>{String(selectedTransaction.id || 'Not available').slice(-12)}</b></div></div>
+        <p className="settings-footnote">This is locally stored prototype activity, not a bank-confirmed transaction receipt.</p><button className="primary-button" onClick={close}>Done</button>
+      </> : <>
+        <div className="activity-summary"><div><span>All activity</span><b>{transactions.length}</b></div><div><span>Money in</span><b className="positive-text">{money(transactions.filter(t => Number(t.amount) > 0).reduce((sum,t) => sum + Number(t.amount),0))}</b></div><div><span>Money out</span><b>{money(transactions.filter(t => Number(t.amount) < 0).reduce((sum,t) => sum + Math.abs(Number(t.amount)),0))}</b></div></div>
+        <label className="history-search-label">Search activity</label><div className="bank-search-field"><Search size={17}/><input className="text-input" value={transactionSearch} onChange={e => setTransactionSearch(e.target.value)} placeholder="Search name or description…" /></div>
+        <div className="history-filter-row" role="group" aria-label="Filter transactions">{[['all','All'],['in','Money in'],['out','Money out']].map(([key,label]) => <button key={key} className={transactionFilter === key ? 'history-filter active' : 'history-filter'} onClick={() => setTransactionFilter(key)}>{label}</button>)}</div>
+        <div className="history-results">{transactions.filter(t => {const query=transactionSearch.trim().toLowerCase(); const matchesText=!query || String(t.merchant||'').toLowerCase().includes(query) || String(t.note||'').toLowerCase().includes(query) || String(t.date||'').toLowerCase().includes(query); const amount=Number(t.amount)||0; const matchesFilter=transactionFilter==='all' || (transactionFilter==='in' && amount>0) || (transactionFilter==='out' && amount<0); return matchesText && matchesFilter;}).length ? transactions.filter(t => {const query=transactionSearch.trim().toLowerCase(); const matchesText=!query || String(t.merchant||'').toLowerCase().includes(query) || String(t.note||'').toLowerCase().includes(query) || String(t.date||'').toLowerCase().includes(query); const amount=Number(t.amount)||0; const matchesFilter=transactionFilter==='all' || (transactionFilter==='in' && amount>0) || (transactionFilter==='out' && amount<0); return matchesText && matchesFilter;}).map(t => <button className="history-result" key={t.id} onClick={() => setSelectedTransaction(t)}><Transaction item={t}/><ChevronRight size={17}/></button>) : <div className="empty"><b>{transactions.length ? 'No matching activity' : 'No transactions yet'}</b><p>{transactions.length ? 'Try another search or filter.' : 'Your prototype activity will appear here.'}</p></div>}</div>
+        <p className="settings-footnote">Activity is stored in this browser prototype and is not verified by a real bank. Exported files contain only activity currently stored in this browser.</p><button className="secondary-button export-activity-button" onClick={exportActivity} disabled={!transactions.length}><Download size={17}/> Download activity CSV</button><button className="primary-button" onClick={close}>Close</button>
+      </>}
+    </>}
     {type === 'invest' && <><div className="watch-row"><span>Aether Index</span><b>$0.00</b><small>0.00%</small></div><div className="watch-row"><span>Aether Bond</span><b>$0.00</b><small>0.00%</small></div><button className="primary-button" onClick={close}>Done</button></>}
   </section></div>;
 }
