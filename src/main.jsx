@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { LockKeyhole, ArrowDownToLine, ArrowLeftRight, Bell, BellOff, Check, ChevronRight, CircleHelp, CreditCard, Eye, EyeOff, FileText, Home as HomeIcon, Menu, Moon, MoreHorizontal, Plus, QrCode, Search, Settings, ShieldCheck, Sun, TrendingUp, User, Wallet, X } from 'lucide-react';
+import { LockKeyhole, ArrowDownToLine, ArrowLeftRight, Bell, BellOff, Check, ChevronRight, CircleHelp, CreditCard, Download, Eye, EyeOff, FileText, Home as HomeIcon, Menu, Moon, MoreHorizontal, Plus, QrCode, Search, Settings, ShieldCheck, Sun, TrendingUp, User, Wallet, X } from 'lucide-react';
 import './styles.css';
 
 const money = (n) => `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -155,6 +155,30 @@ function Modal({ type, close, member, members, addMoney, transfer, debit, regist
   const [settingsExpanded, setSettingsExpanded] = useState('Account preferences');
   const [settingsPrefs, setSettingsPrefs] = useState({ currency: 'USD ($)', timezone: 'Eastern Time (ET)', dateFormat: 'MM/DD/YYYY', dailyLimit: '2500', paperless: true, marketing: false });
   const updateSettings = (key, value) => setSettingsPrefs(current => ({ ...current, [key]: value }));
+  const exportActivity = () => {
+    const escapeCsv = (value) => '"' + String(value ?? '').replace(/"/g, '""') + '"';
+    const rows = [
+      ['Date', 'Name', 'Description', 'Amount (USD)', 'Type', 'Reference'],
+      ...transactions.map(t => [
+        t.date || 'Date unavailable',
+        t.merchant || 'Account activity',
+        t.note || '',
+        Number(t.amount || 0).toFixed(2),
+        Number(t.amount || 0) > 0 ? 'Money in' : Number(t.amount || 0) < 0 ? 'Money out' : 'Other',
+        String(t.id || '').slice(-12)
+      ])
+    ];
+    const csv = rows.map(row => row.map(escapeCsv).join(',')).join('\\r\\n');
+    const url = URL.createObjectURL(new Blob(['\\uFEFF', csv], { type: 'text/csv;charset=utf-8;' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'aetherbank-activity.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    if (flash) flash('Activity CSV downloaded from this prototype.');
+  };
   const titles = { add: 'Add Money', transfer: 'Transfer to a US bank', withdraw: 'Withdraw', pay: 'Pay Bills', cards: 'AetherBank Card', scan: 'Scan to Pay', register: 'Register Member', settings: 'Settings', transactions: 'Transactions', invest: 'Watchlist' };
   const submit = () => { if (type === 'add') addMoney(Number(amount)); else if (type === 'transfer') transfer(Number(amount), recipient); else if (type === 'withdraw') debit(Number(amount), 'ATM withdrawal'); else if (type === 'pay') debit(Number(amount), payee); else if (type === 'scan') debit(Number(amount), 'QR payment'); else if (type === 'register') register(name); };
   return <div className="modal-backdrop" onClick={close}><section className="modal" onClick={e => e.stopPropagation()}><div className="modal-head"><div><small>AETHERBANK</small><h2>{titles[type]}</h2></div><button className="icon-button" onClick={close}><X size={21} /></button></div>
@@ -216,7 +240,7 @@ function Modal({ type, close, member, members, addMoney, transfer, debit, regist
         <label className="history-search-label">Search activity</label><div className="bank-search-field"><Search size={17}/><input className="text-input" value={transactionSearch} onChange={e => setTransactionSearch(e.target.value)} placeholder="Search name or description…" /></div>
         <div className="history-filter-row" role="group" aria-label="Filter transactions">{[['all','All'],['in','Money in'],['out','Money out']].map(([key,label]) => <button key={key} className={transactionFilter === key ? 'history-filter active' : 'history-filter'} onClick={() => setTransactionFilter(key)}>{label}</button>)}</div>
         <div className="history-results">{transactions.filter(t => {const query=transactionSearch.trim().toLowerCase(); const matchesText=!query || String(t.merchant||'').toLowerCase().includes(query) || String(t.note||'').toLowerCase().includes(query) || String(t.date||'').toLowerCase().includes(query); const amount=Number(t.amount)||0; const matchesFilter=transactionFilter==='all' || (transactionFilter==='in' && amount>0) || (transactionFilter==='out' && amount<0); return matchesText && matchesFilter;}).length ? transactions.filter(t => {const query=transactionSearch.trim().toLowerCase(); const matchesText=!query || String(t.merchant||'').toLowerCase().includes(query) || String(t.note||'').toLowerCase().includes(query) || String(t.date||'').toLowerCase().includes(query); const amount=Number(t.amount)||0; const matchesFilter=transactionFilter==='all' || (transactionFilter==='in' && amount>0) || (transactionFilter==='out' && amount<0); return matchesText && matchesFilter;}).map(t => <button className="history-result" key={t.id} onClick={() => setSelectedTransaction(t)}><Transaction item={t}/><ChevronRight size={17}/></button>) : <div className="empty"><b>{transactions.length ? 'No matching activity' : 'No transactions yet'}</b><p>{transactions.length ? 'Try another search or filter.' : 'Your prototype activity will appear here.'}</p></div>}</div>
-        <p className="settings-footnote">Activity is stored in this browser prototype and is not verified by a real bank.</p><button className="primary-button" onClick={close}>Close</button>
+        <p className="settings-footnote">Activity is stored in this browser prototype and is not verified by a real bank. Exported files contain only activity currently stored in this browser.</p><button className="secondary-button export-activity-button" onClick={exportActivity} disabled={!transactions.length}><Download size={17}/> Download activity CSV</button><button className="primary-button" onClick={close}>Close</button>
       </>}
     </>}
     {type === 'invest' && <><div className="watch-row"><span>Aether Index</span><b>$0.00</b><small>0.00%</small></div><div className="watch-row"><span>Aether Bond</span><b>$0.00</b><small>0.00%</small></div><button className="primary-button" onClick={close}>Done</button></>}
