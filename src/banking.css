@@ -133,3 +133,24 @@ input,select,textarea{accent-color:#b79b57}
 .method-card-button .status-badge{margin-top:8px}
 .workflow-aside .generic-row{padding:11px 0}
 @media(max-width:560px){.button-row{justify-content:stretch}.button-row>*{flex:1}.workflow-fields{gap:13px}.field-label{font-size:11px}}
+
+
+/* First-dashboard card composition, using an unissued preview card (no fabricated PAN). */
+.dashboard-card-section{margin:23px 0 0}
+.dashboard-card-section .section-title-row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}
+.dashboard-card-section .section-title-row h2{margin:0;color:#253031;font-size:16px;letter-spacing:-.25px}
+.dashboard-card-section .section-title-row p{margin:5px 0 0;color:#858981;font-size:11px}
+.dashboard-card-preview{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);align-items:center;gap:22px;padding:18px;background:#fffefa;border:1px solid #e5e1d6;border-radius:15px;box-shadow:0 5px 22px rgba(25,35,36,.035)}
+.preview-card-art{min-height:175px;position:relative;overflow:hidden;padding:19px;border-radius:17px;background:linear-gradient(135deg,#333d3d,#66716d 58%,#a79a75);color:#fffefa;box-shadow:0 12px 25px rgba(34,43,42,.15)}
+.preview-card-art:before,.preview-card-art:after{content:"";position:absolute;border:1px solid rgba(255,255,255,.19);border-radius:50%;width:210px;height:210px;right:-80px;top:-100px}
+.preview-card-art:after{width:150px;height:150px;right:-40px;top:-70px}
+.preview-card-brand{position:relative;z-index:1;display:flex;align-items:center;gap:8px;font-size:14px}
+.preview-card-mark{display:grid;place-items:center;width:28px;height:28px;border:1px solid rgba(255,255,255,.75);border-radius:50%}
+.preview-card-chip{position:absolute;top:78px;left:20px;width:32px;height:24px;border:1px solid #d3c9a5;border-radius:6px;background:linear-gradient(135deg,#e2d8b9,#a89c78)}
+.preview-card-contactless{position:absolute;top:75px;left:58px;transform:rotate(-90deg);font-size:21px;color:#eee4c5}
+.preview-card-bottom{position:absolute;z-index:1;left:20px;right:20px;bottom:17px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:9px;letter-spacing:1.1px}
+.preview-card-bottom strong{font-weight:800}
+.preview-card-bottom span{color:#eee2bb}
+.preview-card-copy h3{margin:12px 0 7px;color:#354142;font-size:15px}
+.preview-card-copy p{max-width:360px;margin:0 0 13px;color:#858984;font-size:11px;line-height:1.65}
+@media(max-width:560px){.dashboard-card-preview{grid-template-columns:1fr;gap:15px;padding:13px}.preview-card-art{min-height:165px}.dashboard-card-section .section-title-row{align-items:flex-start}.dashboard-card-section .section-title-row h2{font-size:15px}}
