@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { LockKeyhole, ArrowDownToLine, ArrowLeftRight, Bell, BellOff, Check, ChevronRight, CircleHelp, Copy, CreditCard, Eye, EyeOff, FileText, Home as HomeIcon, Menu, Moon, MoreHorizontal, Plus, QrCode, RotateCcw, Search, Settings, ShieldCheck, Sun, TrendingUp, Truck, User, Wallet, X } from 'lucide-react';
+import { LockKeyhole, ArrowDownToLine, ArrowLeftRight, Bell, BellOff, Check, ChevronRight, CircleDollarSign, CircleHelp, Clock3, Copy, CreditCard, Eye, EyeOff, FileText, Home as HomeIcon, Landmark, Menu, Moon, MoreHorizontal, Plus, QrCode, RotateCcw, Search, Settings, ShieldCheck, ShoppingBag, Sun, TrendingUp, Truck, Utensils, User, Wallet, X, Zap } from 'lucide-react';
 import './styles.css';
 
 const money = (n) => `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -13,12 +13,9 @@ const DEMO_ROUTING_NUMBER = '000000000';
 const DEMO_SWIFT_CODE = 'AETHUS33XXX';
 const id = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-const navigation = [
-  ['home', 'Home', HomeIcon], ['payments', 'Payments', Wallet], ['investments', 'Investments', TrendingUp], ['support', 'Support', CircleHelp], ['profile', 'Profile', User]
-];
-const quickActions = [
-  ['transfer', 'Transfer', ArrowLeftRight], ['withdraw', 'Withdraw', ArrowDownToLine], ['add', 'Add money', Plus], ['pay', 'Pay bills', FileText], ['cards', 'Cards', CreditCard], ['scan', 'Scan to Pay', QrCode]
-];
+const bottomNavigation = [['home', 'Home', HomeIcon], ['payments', 'Payments', Wallet], ['cards', 'Cards', CreditCard], ['profile', 'Profile', User]];
+const secondaryNavigation = [['investments', 'Investments', TrendingUp], ['support', 'Support', CircleHelp]];
+const quickActions = [['transfer', 'Transfer', ArrowLeftRight], ['withdraw', 'Withdraw', ArrowDownToLine], ['pay', 'Pay Bills', FileText], ['cards', 'Cards', CreditCard]];
 
 
 const usBanks = [
@@ -57,6 +54,7 @@ function App() {
   const [hideBalance, setHideBalance] = useState(false);
   const [message, setMessage] = useState('');
   const [physicalFrozen, setPhysicalFrozen] = useState(false);
+  const [globalSearch, setGlobalSearch] = useState('');
 
   const total = member.checking + member.savings;
   const cardSpend = useMemo(() => transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0), [transactions]);
@@ -101,9 +99,9 @@ function App() {
   return <div className={`app ${theme}`}>
     <div className="phone-shell">
       <header className="topbar">
-        <button className="icon-button" onClick={() => setDrawer(true)}><Menu size={25} /></button>
-        <button className="brand" onClick={() => setPage('home')}><span className="brand-mark">AE</span><strong>AetherBank</strong></button>
-        <button className="icon-button notification-button" onClick={() => changeNotifications(!notifications)}>{notifications ? <Bell size={23} /> : <BellOff size={23} />}{notifications && <i />}</button>
+        <button className="icon-button" aria-label="Open secondary menu" onClick={() => setDrawer(true)}><Menu size={22} /></button>
+        <button className="brand" onClick={() => { setPage('home'); setModal(null); }}><span className="brand-mark">AE</span><strong>AetherBank</strong></button>
+        <div className="header-tools"><button className="icon-button" aria-label="Search transactions" onClick={() => { setGlobalSearch(''); setModal('search'); }}><Search size={20} /></button><button className="icon-button notification-button" aria-label="Toggle notifications" onClick={() => changeNotifications(!notifications)}>{notifications ? <Bell size={20} /> : <BellOff size={20} />}{notifications && <i />}</button><button className="icon-button" aria-label="Open settings" onClick={() => setModal('settings')}><Settings size={20} /></button></div>
       </header>
 
       <main className="content">
@@ -114,12 +112,10 @@ function App() {
         {page === 'profile' && <Profile member={member} theme={theme} changeTheme={changeTheme} notifications={notifications} changeNotifications={changeNotifications} open={setModal} />}
       </main>
 
-      <footer className="bottom-nav">
-        {navigation.map(([key, label, Icon]) => <button key={key} className={page === key ? 'active' : ''} onClick={() => setPage(key)}><Icon size={22} /><span>{label}</span></button>)}
-      </footer>
+      <footer className="bottom-nav">{bottomNavigation.map(([key, label, Icon]) => <button key={key} className={(modal === 'cards' ? key === 'cards' : page === key) ? 'active' : ''} onClick={() => { if (key === 'cards') { setModal('cards'); return; } setModal(null); setPage(key); }}><Icon size={21} /><span>{label}</span></button>)}</footer>
 
       {drawer && <Drawer close={() => setDrawer(false)} page={page} setPage={setPage} settings={() => { setDrawer(false); setModal('settings'); }} />}
-      {modal && <Modal type={modal} close={() => setModal(null)} open={setModal} member={member} members={members} addMoney={addMoney} transfer={transfer} debit={debit} register={register} theme={theme} changeTheme={changeTheme} notifications={notifications} changeNotifications={changeNotifications} transactions={transactions} flash={flash} physicalFrozen={physicalFrozen} setPhysicalFrozen={setPhysicalFrozen} />}
+      {modal && <Modal type={modal} close={() => setModal(null)} open={setModal} member={member} members={members} addMoney={addMoney} transfer={transfer} debit={debit} register={register} theme={theme} changeTheme={changeTheme} notifications={notifications} changeNotifications={changeNotifications} transactions={transactions} flash={flash} physicalFrozen={physicalFrozen} setPhysicalFrozen={setPhysicalFrozen} globalSearch={globalSearch} setGlobalSearch={setGlobalSearch} />}
       {message && <div className="toast"><Check size={17} />{message}</div>}
     </div>
   </div>;
@@ -128,35 +124,48 @@ function App() {
 function Home({ member, show, total, hideBalance, setHideBalance, cardSpend, transactions, open }) {
   return <>
     <section className="hero-card">
-      <div className="balance-row"><div><p>Personal Checking</p><small>Available: {show(member.checking)}</small></div><strong>{show(member.checking)}</strong></div>
-      <div className="divider" />
+      <div className="balance-heading"><div><span className="eyebrow">TOTAL RELATIONSHIP BALANCE</span><p>Personal accounts</p></div><button className="balance-visibility" aria-label={hideBalance ? 'Show balances' : 'Hide balances'} onClick={() => setHideBalance(!hideBalance)}>{hideBalance ? <Eye size={18}/> : <EyeOff size={18}/>}</button></div>
+      <div className="balance-row"><div><p>Personal Checking</p><small>Available balance</small></div><strong>{show(member.checking)}</strong></div><div className="divider" />
       <div className="balance-row"><div><p>Savings</p><small>Available to save</small></div><strong>{show(member.savings)}</strong></div>
-      <div className="card-row">
-        <div className="bank-card"><div className="mini-brand"><span>AE</span>AetherBank</div><div className="chip" /><div className="contactless">⌁</div><div className="card-name">{member.name}</div><div className="last-four">•••• {DEMO_CARD_NUMBER.slice(-4)}</div><div className="card-dots"><i /><i /></div></div>
-        <div className="spend"><span>Recent Card Spend</span><b>{show(cardSpend)}</b><div className="progress"><i style={{ width: `${Math.min(100, cardSpend / 30)}%` }} /></div><small>Available: {show(member.checking)}</small></div>
-      </div>
-      <div className="account-line"><ShieldCheck size={14} /> Account <b>••••{member.accountNumber.slice(-5)}</b></div>
+      <div className="account-line"><ShieldCheck size={14} /> Checking account <b>••••{member.accountNumber.slice(-5)}</b></div>
     </section>
     <button className="account-details-link" onClick={() => open('account-details')}><span><ShieldCheck size={17}/><span><b>Account Details</b><small>Routing, account and bank information</small></span></span><ChevronRight size={18}/></button>
+    <section className="dashboard-card-section"><div className="section-heading"><div><h2>Cards & spending</h2><p>Keep track of your everyday spending</p></div><button onClick={() => open('cards')}>Manage <ChevronRight size={16}/></button></div><div className="card-row">
+      <button className="bank-card dashboard-bank-card" onClick={() => open('cards')} aria-label="Manage debit card"><div className="mini-brand"><span>AE</span>AetherBank</div><div className="chip" /><div className="contactless">⌁</div><div className="card-name">{member.name}</div><div className="last-four">•••• {DEMO_CARD_NUMBER.slice(-4)}</div><div className="card-dots"><i /><i /></div></button>
+      <div className="spend"><span>Recent card spend</span><b>{show(cardSpend)}</b><div className="progress"><i style={{ width: `${Math.min(100, cardSpend / 30)}%` }} /></div><small>Checking available: {show(member.checking)}</small></div>
+    </div><p className="demo-card-note">Demo card · no live payment connection</p></section>
 
-    <div className="total-line"><span>Total balance</span><strong>{show(total)}</strong><button onClick={() => setHideBalance(!hideBalance)}>{hideBalance ? <Eye size={17} /> : <EyeOff size={17} />}</button></div>
-
-    <section className="actions-section"><h2>Banking Actions</h2><div className="action-grid">{quickActions.map(([key, label, Icon]) => <button key={key} onClick={() => open(key)}><span><Icon size={23} /></span><b>{label}</b></button>)}<button onClick={() => open('register')}><span><User size={23} /></span><b>Register Member</b></button></div></section>
+    <section className="actions-section"><div className="section-heading"><h2>Banking Actions</h2><span className="section-caption">Quick access</span></div><div className="action-grid">{quickActions.map(([key, label, Icon]) => <button key={key} onClick={() => open(key)}><span><Icon size={22} /></span><b>{label}</b></button>)}</div></section>
 
     <section className="transactions"><div className="section-heading"><h2>Recent Transactions</h2><button onClick={() => open('transactions')}><MoreHorizontal size={20} /></button></div><div className="search"><Search size={18} /><span>Search transactions</span></div>{transactions.length ? transactions.slice(0, 8).map(t => <Transaction key={t.id} item={t} />) : <div className="empty"><div className="empty-icon"><Wallet size={22} /></div><div><b>No transactions yet</b><p>Your transaction history will appear here.</p></div></div>}</section>
   </>;
 }
 
-function Transaction({ item }) { const positive = item.amount > 0; return <div className="transaction"><div className={`merchant-icon ${positive ? 'positive' : ''}`}>{positive ? <Plus size={17} /> : <CreditCard size={17} />}</div><div className="transaction-copy"><b>{item.merchant}</b><span>{item.note} · {item.date}</span></div><strong className={positive ? 'positive-text' : ''}>{positive ? '+' : '−'}{money(Math.abs(item.amount))}</strong></div>; }
+function Transaction({ item }) {
+  const positive = item.amount > 0;
+  const label = `${item.merchant || ''} ${item.note || ''}`.toLowerCase();
+  const Icon = /transfer|account funding|deposit|payroll|salary/.test(label) ? Landmark : /grocery|market|shop|store|retail/.test(label) ? ShoppingBag : /cafe|coffee|restaurant|food|dining/.test(label) ? Utensils : /electric|utility|bill|power/.test(label) ? Zap : /atm|withdraw|cash/.test(label) ? CircleDollarSign : CreditCard;
+  const status = item.status === 'pending' ? 'Pending' : 'Completed';
+  return <div className="transaction"><div className={`merchant-icon ${positive ? 'positive' : ''}`}><Icon size={18}/></div><div className="transaction-copy"><div className="transaction-title-row"><b>{item.merchant || 'Account activity'}</b><span className={`transaction-status ${status.toLowerCase()}`}>{status}</span></div><span className="transaction-meta">{item.note || (positive ? 'Incoming credit' : 'Card payment')} <i>·</i> <Clock3 size={11}/>{item.date || 'Date unavailable'}</span></div><strong className={`transaction-amount ${positive ? 'positive-text' : ''}`}>{positive ? '+' : '−'}{money(Math.abs(item.amount))}</strong></div>;
+}
 function Page({ title, subtitle, children }) { return <section className="page"><h1>{title}</h1><p className="page-subtitle">{subtitle}</p>{children}</section>; }
 function Payments({ open, transactions }) { return <Page title="Payments" subtitle="Transfer money, pay bills and manage cards."><div className="feature-grid"><Feature icon={ArrowLeftRight} title="Transfer" text="Send money to another AetherBank member." click={() => open('transfer')} /><Feature icon={FileText} title="Pay Bills" text="Make a payment from your checking account." click={() => open('pay')} /><Feature icon={QrCode} title="Scan to Pay" text="Pay securely with a QR code." click={() => open('scan')} /><Feature icon={CreditCard} title="Cards" text="View your active AetherBank card." click={() => open('cards')} /></div><div className="panel"><h2>Payment Activity</h2>{transactions.length ? transactions.slice(0, 6).map(t => <Transaction key={t.id} item={t} />) : <div className="empty"><b>No payment activity yet.</b></div>}</div></Page>; }
 function Feature({ icon: Icon, title, text, click }) { return <button className="feature" onClick={click}><span><Icon size={22} /></span><div><b>{title}</b><p>{text}</p></div><ChevronRight size={18} /></button>; }
 function Investments({ open }) { return <Page title="Investments" subtitle="Track your portfolio and future wealth."><div className="investment-card"><small>PORTFOLIO VALUE</small><strong>$0.00</strong><div><TrendingUp size={18} /> 0.00% today</div></div><div className="panel"><div className="section-heading"><h2>Watchlist</h2><button onClick={() => open('invest')}>Manage</button></div><div className="watch-row"><span>Aether Index</span><b>$0.00</b><small>0.00%</small></div><div className="watch-row"><span>Aether Bond</span><b>$0.00</b><small>0.00%</small></div></div></Page>; }
-function Support({ flash }) { return <Page title="Support" subtitle="Help with your account and banking services."><div className="support-hero"><div className="support-orb"><CircleHelp size={28} /></div><div><b>AetherBank Support</b><p>Find answers or contact support for account help.</p></div></div>{['How do I register a member?', 'How do internal transfers work?', 'How do I change my theme?', 'How do I manage my card?'].map(q => <button className="list-item" key={q} onClick={() => flash('Support information opened.')}>{q}<ChevronRight size={18} /></button>)}<button className="primary-button" onClick={() => flash('Support request started.')}>Contact Support</button></Page>; }
+function Support({ flash }) {
+  const [expanded, setExpanded] = useState(0);
+  const faqs = [
+    ['How do internal and wire transfers work?', 'Internal transfers between accounts at the same institution are often processed quickly. Wire transfers move through banking networks and may have fees, cut-off times, and additional verification. Availability depends on your bank and destination. This demo does not send transfers.'],
+    ['What are my daily transaction and ATM limits?', 'Daily purchase, transfer, and ATM limits vary by account, card, and institution. Check your official account agreement or contact your bank for your actual limits. Any limits shown in this prototype are illustrative only.'],
+    ['How do I lock or report a lost card?', 'Use your bank’s official app or phone number to lock a missing card immediately, then contact the bank to report it and request a replacement. The Freeze control in this demo only changes the preview state and does not block real transactions.'],
+    ['When do direct deposits post to my checking account?', 'Posting time depends on when the sender submits the payment, the receiving bank’s processing schedule, and holidays. Ask your payroll provider or bank for deposit-specific timing; this prototype cannot receive actual direct deposits.']
+  ];
+  return <Page title="Support" subtitle="Guidance for everyday banking and account security."><div className="support-hero"><div className="support-orb"><CircleHelp size={26} /></div><div><b>How can we help?</b><p>Browse common banking questions or reach the support team.</p></div></div><div className="faq-list">{faqs.map(([q,a],i) => <section className={`faq-item ${expanded === i ? 'expanded' : ''}`} key={q}><button className="faq-question" aria-expanded={expanded === i} onClick={() => setExpanded(expanded === i ? -1 : i)}><span>{q}</span><ChevronRight size={18}/></button>{expanded === i && <p className="faq-answer">{a}</p>}</section>)}</div><button className="primary-button" onClick={() => flash('Support request is a preview only. No support agent is connected.')}>Contact Support</button><p className="support-disclaimer">AetherBank is a UI prototype. For real account issues, contact your bank using its official contact details.</p></Page>;
+}
 function Profile({ member, theme, changeTheme, notifications, changeNotifications, open }) { return <Page title="Profile" subtitle="Your AetherBank account and preferences."><div className="profile-card"><div className="avatar">AE</div><div><b>{member.name}</b><p>Account ••••{member.accountNumber.slice(-5)}</p></div><ShieldCheck size={20} /></div><div className="panel"><button className="settings-row" onClick={() => open('settings')}><span><Settings size={19} /> Settings</span><ChevronRight size={18} /></button><button className="settings-row" onClick={() => changeNotifications(!notifications)}><span>{notifications ? <Bell size={19} /> : <BellOff size={19} />} Notifications</span><em>{notifications ? 'On' : 'Off'}</em></button><div className="theme-choice"><span>Theme</span><div><button className={theme === 'light' ? 'selected' : ''} onClick={() => changeTheme('light')}><Sun size={16} /> Light</button><button className={theme === 'dark' ? 'selected' : ''} onClick={() => changeTheme('dark')}><Moon size={16} /> Dark</button></div></div></div><div className="security-box"><ShieldCheck size={20} /><div><b>Account Security</b><p>Identity, account and payment controls are managed from your secure banking profile.</p></div></div></Page>; }
-function Drawer({ close, setPage, settings }) { return <div className="drawer-backdrop" onClick={close}><aside className="drawer" onClick={e => e.stopPropagation()}><div className="drawer-head"><div className="brand"><span className="brand-mark">AE</span><strong>AetherBank</strong></div><button className="icon-button" onClick={close}><X size={22} /></button></div><p className="drawer-label">BANKING</p>{navigation.map(([key, label, Icon]) => <button className="drawer-link" key={key} onClick={() => { setPage(key); close(); }}><Icon size={19} />{label}<ChevronRight size={16} /></button>)}<p className="drawer-label">ACCOUNT</p><button className="drawer-link" onClick={settings}><Settings size={19} />Settings<ChevronRight size={16} /></button></aside></div>; }
+function Drawer({ close, setPage, settings }) { return <div className="drawer-backdrop" onClick={close}><aside className="drawer" onClick={e => e.stopPropagation()}><div className="drawer-head"><div className="brand"><span className="brand-mark">AE</span><strong>AetherBank</strong></div><button className="icon-button" aria-label="Close menu" onClick={close}><X size={22} /></button></div><p className="drawer-label">EXPLORE</p>{secondaryNavigation.map(([key, label, Icon]) => <button className="drawer-link" key={key} onClick={() => { setPage(key); close(); }}><Icon size={19} />{label}<ChevronRight size={16} /></button>)}<div className="drawer-demo"><ShieldCheck size={18}/><span><b>Account protected</b><small>Search, notifications and settings are available in the top bar.</small></span></div></aside></div>; }
 
-function Modal({ type, close, open, member, members, addMoney, transfer, debit, register, theme, changeTheme, notifications, changeNotifications, transactions, flash, physicalFrozen, setPhysicalFrozen }) {
+function Modal({ type, close, open, member, members, addMoney, transfer, debit, register, theme, changeTheme, notifications, changeNotifications, transactions, flash, physicalFrozen, setPhysicalFrozen, globalSearch, setGlobalSearch }) {
   const [amount, setAmount] = useState(''); const [recipient, setRecipient] = useState(''); const [name, setName] = useState(''); const [payee, setPayee] = useState('Utility bill');
   const [bankSearch, setBankSearch] = useState(''); const [selectedBank, setSelectedBank] = useState(''); const [recipientName, setRecipientName] = useState(''); const [accountLast4, setAccountLast4] = useState(''); const [reviewTransfer, setReviewTransfer] = useState(false);
   const [settingsExpanded, setSettingsExpanded] = useState('Account preferences');
@@ -165,7 +174,7 @@ function Modal({ type, close, open, member, members, addMoney, transfer, debit, 
   const copyValue = async (value, label) => { try { await navigator.clipboard.writeText(value); flash(`${label} copied.`); } catch { flash('Clipboard access is unavailable in this browser.'); } };
   const [settingsPrefs, setSettingsPrefs] = useState({ currency: 'USD ($)', timezone: 'Eastern Time (ET)', dateFormat: 'MM/DD/YYYY', dailyLimit: '2500', paperless: true, marketing: false });
   const updateSettings = (key, value) => setSettingsPrefs(current => ({ ...current, [key]: value }));
-  const titles = { add: 'Add Money', transfer: 'Transfer to a US bank', withdraw: 'Withdraw', pay: 'Pay Bills', cards: 'Card Management', 'virtual-card-details': 'Virtual Card Details', 'physical-card-details': 'Physical Card Details', 'account-details': 'Account Details', scan: 'Scan to Pay', register: 'Register Member', settings: 'Settings', transactions: 'Transactions', invest: 'Watchlist' };
+  const titles = { search: 'Search activity', add: 'Add Money', transfer: 'Transfer to a US bank', withdraw: 'Withdraw', pay: 'Pay Bills', cards: 'Card Management', 'virtual-card-details': 'Virtual Card Details', 'physical-card-details': 'Physical Card Details', 'account-details': 'Account Details', scan: 'Scan to Pay', register: 'Register Member', settings: 'Settings', transactions: 'Transactions', invest: 'Watchlist' };
   const submit = () => { if (type === 'add') addMoney(Number(amount)); else if (type === 'transfer') transfer(Number(amount), recipient); else if (type === 'withdraw') debit(Number(amount), 'ATM withdrawal'); else if (type === 'pay') debit(Number(amount), payee); else if (type === 'scan') debit(Number(amount), 'QR payment'); else if (type === 'register') register(name); };
   return <div className="modal-backdrop" onClick={close}><section className="modal" onClick={e => e.stopPropagation()}><div className="modal-head"><div><small>AETHERBANK</small><h2>{titles[type]}</h2></div><button className="icon-button" onClick={close}><X size={21} /></button></div>
     {type === 'settings' && <div className="settings-details">
@@ -255,6 +264,7 @@ function Modal({ type, close, open, member, members, addMoney, transfer, debit, 
       <button className="secondary-button card-action-button" onClick={() => flash('PIN reset is unavailable in this demo. No PIN was changed.')}><RotateCcw size={16}/> Reset PIN</button>
       <p className="settings-footnote">Freeze and PIN controls are simulated locally. No real card is affected.</p><button className="primary-button" onClick={close}>Done</button>
     </div>}
+    {type === 'search' && <div className="global-search-content"><label htmlFor="global-activity-search">Search by merchant, category or description</label><div className="global-search-field"><Search size={18}/><input id="global-activity-search" className="text-input" autoFocus value={globalSearch} onChange={e => setGlobalSearch(e.target.value)} placeholder="e.g. groceries, transfer, bill" /></div>{transactions.filter(t => `${t.merchant || ''} ${t.note || ''}`.toLowerCase().includes(globalSearch.toLowerCase())).length ? transactions.filter(t => `${t.merchant || ''} ${t.note || ''}`.toLowerCase().includes(globalSearch.toLowerCase())).map(t => <Transaction key={t.id} item={t} />) : <div className="empty"><b>No matching activity</b><p>Try a different merchant or description.</p></div>}<button className="primary-button" onClick={close}>Done</button></div>}
     {type === 'transactions' && <>{transactions.length ? transactions.map(t => <Transaction key={t.id} item={t} />) : <div className="empty"><b>No transactions yet</b></div>}<button className="primary-button" onClick={close}>Close</button></>}
     {type === 'invest' && <><div className="watch-row"><span>Aether Index</span><b>$0.00</b><small>0.00%</small></div><div className="watch-row"><span>Aether Bond</span><b>$0.00</b><small>0.00%</small></div><button className="primary-button" onClick={close}>Done</button></>}
   </section></div>;
