@@ -115,3 +115,52 @@ button { border: 0; cursor: pointer; }
 .bank-monogram{width:37px;height:37px;flex:0 0 auto;display:grid;place-items:center;border-radius:11px;background:var(--surface-2);color:var(--accent);font-size:11px;font-weight:700}
 .bank-option>span:nth-child(2){flex:1;min-width:0}.bank-option b{display:block;font-size:12px}.bank-option small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.bank-radio{width:20px;height:20px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;font-size:12px;color:var(--accent)}.bank-option.selected .bank-radio{border-color:var(--accent);font-weight:700}
 .review-badge{display:flex;align-items:center;gap:9px;color:var(--accent);margin-bottom:13px}.review-badge b{color:var(--text);font-size:14px}.bank-review-card{border:1px solid var(--line);border-radius:15px;padding:0 14px;margin:12px 0;background:var(--surface)}.bank-review-card .info-row{gap:15px}.bank-review-card .info-row span{color:var(--muted)}.bank-review-card .info-row b{text-align:right;max-width:58%;overflow-wrap:anywhere}.secondary-button{width:100%;min-height:46px;margin-top:9px;border:1px solid var(--line);border-radius:14px;background:transparent;color:var(--text);font-weight:600}
+
+
+/* Dashboard account privacy and account-details entry */
+.account-line{display:flex;align-items:center;gap:7px;padding:14px 1px 0;color:var(--muted);font-size:12px}
+.account-line b{margin-left:auto;color:var(--text);font-size:13px;letter-spacing:.2px}
+.account-details-link{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;margin:10px 0 4px;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--text);text-align:left}
+.account-details-link>span{display:flex;align-items:center;gap:11px;color:var(--accent)}
+.account-details-link>span>span{display:grid;gap:3px;color:var(--text)}
+.account-details-link b{font-size:13px}.account-details-link small{color:var(--muted);font-size:11px}
+.account-details-link>svg{color:var(--muted)}
+.account-details-content .settings-footnote{margin-top:14px;line-height:1.5}
+.account-detail-row,.copy-detail-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 0;border-bottom:1px solid var(--line);font-size:12px}
+.account-detail-row>span,.copy-detail-row>div>span{color:var(--muted)}
+.account-detail-row>b,.copy-detail-row>div>b{color:var(--text);text-align:right;overflow-wrap:anywhere}
+.copy-detail-row>div{display:grid;gap:5px;min-width:0}
+.copy-detail-row>div>b{font-size:13px;letter-spacing:.3px}
+.copy-detail-row>button{display:flex;align-items:center;justify-content:center;gap:5px;flex:0 0 auto;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--text);font-size:11px;font-weight:700}
+
+/* Virtual and physical card management */
+.card-tabs{margin-bottom:17px}
+.card-tabs button{min-height:39px}
+.card-management-section{display:grid;gap:8px}
+.managed-card-preview{position:relative;display:block;width:100%;min-height:205px;padding:16px;border-radius:18px;overflow:hidden;border:0;text-align:left;color:#f4f3ee;background:linear-gradient(135deg,#193c50,#0d2233 72%,#4a5d62);box-shadow:0 13px 25px rgba(0,0,0,.2)}
+.managed-card-preview::after{content:'';position:absolute;right:-42px;bottom:-100px;width:220px;height:220px;border:1px solid rgba(255,255,255,.17);border-radius:50%;pointer-events:none}
+.physical-card-preview{background:linear-gradient(135deg,#7e7c73,#373d42 72%,#1b2d39)}
+.card-preview-top{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.managed-card-preview .mini-brand{color:#f4f3ee}
+.card-type-pill{padding:5px 7px;border:1px solid rgba(255,255,255,.32);border-radius:7px;font-size:8px;letter-spacing:1px;font-weight:700}
+.managed-card-preview .chip{top:74px;left:17px;background:linear-gradient(135deg,#c4c6bc,#858a88);border-color:#8b908e}
+.managed-card-preview .contactless{top:70px;left:60px;color:#f4f3ee}
+.managed-card-preview>b{position:absolute;left:17px;bottom:38px;font-size:12px;font-weight:600;max-width:70%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.managed-card-preview>small{position:absolute;left:17px;bottom:17px;font-size:11px;letter-spacing:1.3px}
+.card-preview-hint{position:absolute;right:14px;bottom:14px;z-index:1;display:flex;align-items:center;gap:3px;font-size:9px;color:rgba(255,255,255,.8)}
+.card-management .info-row,.card-detail-modal .info-row{gap:12px}
+.card-management .info-row span,.card-detail-modal .info-row span{color:var(--muted)}
+.card-action-button{display:flex;align-items:center;justify-content:center;gap:8px}
+.revealed-card-details{display:grid;gap:0;padding:0 13px;border:1px solid var(--line);border-radius:13px;background:var(--surface-2)}
+.revealed-card-details>div{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);font-size:11px}
+.revealed-card-details>div:last-child{border-bottom:0}
+.revealed-card-details span{color:var(--muted)}
+.revealed-card-details b{font-size:12px;letter-spacing:.4px;overflow-wrap:anywhere;text-align:right}
+.card-switch-line{width:100%;border:0;background:transparent;color:var(--text);text-align:left;cursor:pointer}
+.card-switch-line>span:first-child{flex:1}
+.card-switch-line>span:first-child>span{display:block}
+.card-switch-line b{font-size:12px}
+.card-switch-line small{display:block;color:var(--muted);font-size:10px;margin-top:4px;line-height:1.4}
+.detail-card-preview{margin-bottom:16px}
+.card-detail-modal .settings-footnote{line-height:1.5;margin:14px 0 4px}
+@media(max-width:390px){.account-detail-row,.copy-detail-row{font-size:11px}.copy-detail-row>button{padding:8px 7px}.managed-card-preview{min-height:195px}.card-preview-hint{font-size:8px}}
