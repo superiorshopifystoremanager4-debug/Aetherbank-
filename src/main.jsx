@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ArrowDownToLine, ArrowLeftRight, Bell, BellOff, Check, ChevronRight, CircleHelp, CreditCard, Eye, EyeOff, FileText, Home as HomeIcon, Menu, Moon, MoreHorizontal, Plus, QrCode, Search, Settings, ShieldCheck, Sun, TrendingUp, User, Wallet, X } from 'lucide-react';
+import { LockKeyhole, ArrowDownToLine, ArrowLeftRight, Bell, BellOff, Check, ChevronRight, CircleHelp, CreditCard, Eye, EyeOff, FileText, Home as HomeIcon, Menu, Moon, MoreHorizontal, Plus, QrCode, Search, Settings, ShieldCheck, Sun, TrendingUp, User, Wallet, X } from 'lucide-react';
 import './styles.css';
 
 const money = (n) => `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
