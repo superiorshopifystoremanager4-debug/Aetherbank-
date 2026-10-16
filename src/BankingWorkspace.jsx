@@ -55,7 +55,7 @@ function BankingWorkspace() {
     </aside>
     {mobileNav && <button className="mobile-scrim" aria-label="Close navigation" onClick={() => setMobileNav(false)}/>}
     <div className="main-column">
-      <header className="top-header"><button className="mobile-menu" onClick={() => setMobileNav(true)} aria-label="Open menu"><Menu size={22}/></button><div className="breadcrumbs"><span>Workspace</span><ChevronRight size={14}/><strong>{navGroups.flatMap(g=>g.items).find(i=>i[0]===page)?.[1] || 'Overview'}</strong></div><div className="header-actions"><div className="service-pill"><span/>Services setup in progress</div><button className="header-icon" aria-label="Notifications" onClick={() => flash('You are all caught up.')}><Bell size={19}/><i/></button><button className="header-avatar" onClick={() => go('profile')}>JJ</button></div></header>
+      <header className="top-header"><button className="mobile-menu" onClick={() => setMobileNav(true)} aria-label="Open menu"><Menu size={22}/></button><div className="breadcrumbs"><span>Workspace</span><ChevronRight size={14}/><strong>{navGroups.flatMap(g=>g.items).find(i=>i[0]===page)?.[1] || 'Overview'}</strong></div><div className="header-actions"><div className="service-pill"><span/>Sandbox preview · no real funds</div><button className="header-icon" aria-label="Notifications" onClick={() => flash('You are all caught up.')}><Bell size={19}/><i/></button><button className="header-avatar" onClick={() => go('profile')}>JJ</button></div></header>
       <main className="page-content">
         {page === 'overview' && <Overview displayMoney={displayMoney} hideBalance={hideBalance} setHideBalance={setHideBalance} go={go}/>}
         {page === 'accounts' && <Accounts displayMoney={displayMoney} go={go}/>}
