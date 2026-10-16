@@ -6,6 +6,7 @@ import {
   Globe, Headphones, Home, Landmark, LockKeyhole, LogOut, Menu, MoreHorizontal,
   Plus, Search, Settings, ShieldCheck, Smartphone, UserRound, Wallet, X, Zap
 } from 'lucide-react';
+import './styles.css';
 import './banking.css';
 
 const currency = (value) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 2 }).format(value);
@@ -48,17 +49,14 @@ function BankingWorkspace() {
   const displayMoney = (value) => hideBalance ? '••••••••' : currency(value);
   const resetWithdrawal = () => { setWithdrawStep(0); setDestination(''); setBankName(''); setAmount(''); setReference(''); setSubmitted(false); };
 
-  return <div className="bank-app">
-    <aside className={`sidebar ${mobileNav ? 'sidebar-open' : ''}`}>
-      <div className="brand-lockup"><div className="brand-emblem"><Landmark size={21}/></div><div><strong>AetherBank</strong><span>PERSONAL BANKING</span></div><button className="sidebar-close" onClick={() => setMobileNav(false)} aria-label="Close menu"><X size={18}/></button></div>
-      <div className="workspace-label">YOUR WORKSPACE <span className="online-dot"/> </div>
-      {navGroups.map(group => <div className="nav-group" key={group.title}><p>{group.title}</p>{group.items.map(([key,label,Icon]) => <button key={key} className={`nav-link ${page === key ? 'nav-active' : ''}`} onClick={() => { if (key === 'withdraw') resetWithdrawal(); go(key); }}><Icon size={18}/><span>{label}</span>{key === 'withdraw' && <span className="nav-tag">NEW</span>}</button>)}</div>)}
-      <div className="sidebar-bottom"><div className="help-card"><div className="help-icon"><Headphones size={18}/></div><strong>Need a hand?</strong><p>Our support team is here to help with your account.</p><button onClick={() => go('support')}>Visit help centre <ArrowRight size={14}/></button></div><div className="sidebar-user"><div className="user-avatar">JJ</div><div><strong>Jacob Joshua</strong><span>Personal account</span></div><button aria-label="Open profile" onClick={() => go('profile')}><MoreHorizontal size={19}/></button></div></div>
-    </aside>
-    {mobileNav && <button className="mobile-scrim" aria-label="Close navigation" onClick={() => setMobileNav(false)}/>}
-    <div className="main-column">
-      <header className="top-header"><button className="mobile-menu" onClick={() => setMobileNav(true)} aria-label="Open menu"><Menu size={22}/></button><div className="breadcrumbs"><span>Workspace</span><ChevronRight size={14}/><strong>{navGroups.flatMap(g=>g.items).find(i=>i[0]===page)?.[1] || 'Overview'}</strong></div><div className="header-actions"><div className="service-pill"><span/>Sandbox preview · zero balances</div><button className="header-icon" aria-label="Notifications" onClick={() => go('notifications')}><Bell size={19}/><i/></button><button className="header-avatar" onClick={() => go('profile')}>JJ</button></div></header>
-      <main className="page-content">
+  return <div className="app">
+    <div className="phone-shell">
+      <header className="topbar">
+        <button className="icon-button" onClick={() => setMobileNav(true)} aria-label="Open navigation"><Menu size={25}/></button>
+        <button className="brand" onClick={() => go('overview')} aria-label="AetherBank home"><span className="brand-mark">AE</span><strong>AetherBank</strong></button>
+        <button className="icon-button notification-button" onClick={() => go('notifications')} aria-label="Open notifications"><Bell size={23}/><i/></button>
+      </header>
+      <main className="content">
         {page === 'overview' && <Overview displayMoney={displayMoney} hideBalance={hideBalance} setHideBalance={setHideBalance} go={go}/>}
         {page === 'accounts' && <Accounts displayMoney={displayMoney} go={go}/>}
         {page === 'withdraw' && <Withdrawal step={withdrawStep} setStep={setWithdrawStep} method={withdrawMethod} setMethod={setWithdrawMethod} destination={destination} setDestination={setDestination} bankName={bankName} setBankName={setBankName} amount={amount} setAmount={setAmount} reference={reference} setReference={setReference} submitted={submitted} setSubmitted={setSubmitted} reset={resetWithdrawal} go={go} flash={flash}/>}
@@ -78,27 +76,54 @@ function BankingWorkspace() {
         {page === 'scan-pay' && <GenericPage icon={Smartphone} title="Scan to Pay" subtitle="Preview QR payment options. Camera and live payment processing are not connected." items={['QR code payment overview','Merchant details and amount review','Payment confirmation and receipt preview']} flash={flash}/>}
         {page === 'support' && <Support flash={flash}/>}
       </main>
-      <nav className="mobile-bottom-nav" aria-label="Primary navigation">
+      <nav className="bottom-nav" aria-label="Primary navigation">
         {[
-          ['overview','Home',Home],['transfer','Payments',ArrowLeftRight],['investments','Invest',BookOpen],['support','Support',Headphones],['profile','Profile',UserRound]
-        ].map(([key,label,Icon]) => <button key={key} type="button" className={page===key?'mobile-bottom-active':''} onClick={()=>go(key)}><Icon size={19}/><span>{label}</span></button>)}
+          ['overview','Home',Home],['transfer','Payments',ArrowLeftRight],['investments','Investments',BookOpen],['support','Support',Headphones],['profile','Profile',UserRound]
+        ].map(([key,label,Icon]) => <button key={key} type="button" className={page===key?'active':''} onClick={()=>go(key)}><Icon size={21}/><span>{label}</span></button>)}
       </nav>
-      <footer className="app-footer"><span>© 2026 AetherBank Financial Services</span><div><button onClick={() => flash('Fee schedule is being prepared for the selected product.')}>Fees</button><button onClick={() => flash('Privacy information will be published before customer onboarding.')}>Privacy</button><button onClick={() => go('support')}>Contact</button></div></footer>
+      {mobileNav && <div className="drawer-backdrop" onClick={() => setMobileNav(false)}>
+        <aside className="drawer" onClick={event => event.stopPropagation()}>
+          <div className="drawer-head"><div className="brand"><span className="brand-mark">AE</span><strong>AetherBank</strong></div><button className="icon-button" onClick={() => setMobileNav(false)} aria-label="Close navigation"><X size={22}/></button></div>
+          {navGroups.map(group => <React.Fragment key={group.title}><p className="drawer-label">{group.title}</p>{group.items.map(([key,label,Icon]) => <button className="drawer-link" key={key} onClick={() => { if (key === 'withdraw') resetWithdrawal(); go(key); }}><Icon size={19}/>{label}<ChevronRight size={16}/></button>)}</React.Fragment>)}
+          <div className="drawer-demo"><ShieldCheck size={17}/><div><strong>Sandbox preview</strong><br/><small>All balances stay at ₦0.00. Registration and live money movement are disabled.</small></div></div>
+        </aside>
+      </div>}
+      {notice && <div className="toast"><Check size={17}/>{notice}</div>}
     </div>
-    {notice && <div className="toast-message"><Check size={17}/>{notice}</div>}
   </div>;
-}
 
 function PageHeader({eyebrow='YOUR MONEY, IN CONTROL', title, subtitle, action}) { return <div className="page-heading"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1><p>{subtitle}</p></div>{action}</div>; }
 function StatusBadge({children, tone='neutral'}) { return <span className={`status-badge status-${tone}`}><i/>{children}</span>; }
 
 function Overview({displayMoney, hideBalance, setHideBalance, go}) {
-  return <><PageHeader title="Good afternoon, Jacob" subtitle="Here’s what’s happening with your banking today." action={<button className="button-secondary" onClick={()=>go('statements')}><Download size={16}/> Statements</button>}/>
-    <div className="service-notice"><div className="notice-symbol"><ShieldCheck size={20}/></div><div><strong>Account services are being connected</strong><p>All product screens are available to explore without registration. Balances start at ₦0.00; live deposits, transfers and cash-out remain sandbox-only until regulated account and payment services are connected.</p></div><StatusBadge tone="warning">Setup in progress</StatusBadge></div>
-    <section className="balance-panel"><div className="balance-panel-top"><div><span className="light-label">TOTAL ACCOUNT BALANCE</span><button className="balance-eye" onClick={()=>setHideBalance(!hideBalance)} aria-label="Toggle balance visibility">{hideBalance?<Eye size={17}/>:<EyeOff size={17}/>}</button></div><span className="account-ref">ACCOUNT OVERVIEW <span>•</span> NGN</span></div><div className="balance-amount">{displayMoney(0)}</div><div className="balance-foot"><span><i/> Available balance</span><span>As of today</span></div><div className="balance-divider"/><div className="balance-subaccounts"><div><span className="subaccount-icon"><Wallet size={18}/></span><div><small>Personal account</small><strong>{displayMoney(0)}</strong></div><span className="account-type">NGN · Current</span></div><div><span className="subaccount-icon savings-icon"><Landmark size={18}/></span><div><small>Savings account</small><strong>{displayMoney(0)}</strong></div><span className="account-type">Not opened</span></div></div></section>
-    <section className="dashboard-card-section"><div className="section-title-row"><div><h2>Your AetherBank card</h2><p>Preview the card experience before a card is issued.</p></div><button className="text-link" onClick={()=>go('cards')}>Card controls <ArrowRight size={15}/></button></div><div className="dashboard-card-preview"><div className="preview-card-art"><div className="preview-card-brand"><span className="preview-card-mark"><Landmark size={16}/></span><strong>AetherBank</strong></div><div className="preview-card-chip"/><span className="preview-card-contactless">)))</span><div className="preview-card-bottom"><strong>PREVIEW ONLY</strong><span>NOT ISSUED</span></div></div><div className="preview-card-copy"><span className="status-badge status-warning"><i/>Card not issued</span><h3>Explore card features</h3><p>Card details are intentionally blank. No card number or card account is generated in this preview.</p><button className="button-secondary" onClick={()=>go('cards')}>Open cards <ArrowRight size={15}/></button></div></div></section>
-    <section className="section-block"><div className="section-title-row"><div><h2>Quick actions</h2><p>Choose what you’d like to do next.</p></div></div><div className="quick-action-grid"><ActionTile icon={ArrowLeftRight} title="Transfer money" text="Preview a transfer" onClick={()=>go('transfer')}/><ActionTile icon={ArrowDownRight} title="Withdraw funds" text="Preview cash-out" onClick={()=>go('withdraw')}/><ActionTile icon={Plus} title="Add money" text="Explore funding" onClick={()=>go('add-money')}/><ActionTile icon={CreditCard} title="Cards" text="View card controls" onClick={()=>go('cards')}/><ActionTile icon={FileText} title="Pay bills" text="Explore bill payments" onClick={()=>go('pay-bills')}/><ActionTile icon={Smartphone} title="Scan to Pay" text="Preview QR payments" onClick={()=>go('scan-pay')}/></div></section>
-    <div className="dashboard-lower"><section className="white-panel activity-panel"><div className="panel-heading"><div><h2>Recent activity</h2><p>Your latest account events will appear here.</p></div><button className="text-link" onClick={()=>go('transactions')}>View all <ArrowRight size={15}/></button></div><div className="empty-state"><div className="empty-state-icon"><FileClock size={22}/></div><strong>No account activity yet</strong><p>When account services are connected, confirmed transactions and their statuses will appear here.</p></div></section><section className="white-panel security-panel"><div className="panel-heading"><div><h2>Security overview</h2><p>Keep your account protected.</p></div><ShieldCheck size={20}/></div><div className="security-line"><span><LockKeyhole size={17}/> Sign-in protection</span><StatusBadge tone="warning">Setup needed</StatusBadge></div><div className="security-line"><span><Smartphone size={17}/> Trusted devices</span><span className="muted-text">Not configured</span></div><button className="button-secondary full-button" onClick={()=>go('security')}>Open security centre <ArrowRight size={15}/></button></section></div>
+  return <>
+    <section className="hero-card">
+      <div className="balance-row"><div><p>Personal Checking</p><small>Available: {displayMoney(0)}</small></div><strong>{displayMoney(0)}</strong></div>
+      <div className="divider"/>
+      <div className="balance-row savings"><div><p>Savings</p><small>Available to save</small></div><strong>{displayMoney(0)}</strong></div>
+      <div className="card-row">
+        <div className="bank-card">
+          <div className="mini-brand"><span>AE</span>AetherBank</div>
+          <div className="chip"/>
+          <div className="contactless">⌁</div>
+          <div className="card-name">PREVIEW ONLY</div>
+          <div className="last-four">NOT ISSUED</div>
+          <div className="card-dots"><i/><i/></div>
+        </div>
+        <div className="spend"><span>Recent Card Spend</span><b>{displayMoney(0)}</b><div className="progress"><i style={{width:'0%'}}/></div><small>Available: {displayMoney(0)}</small></div>
+      </div>
+      <div className="demo-note"><ShieldCheck size={14}/> Sandbox preview · no account or card has been issued.</div>
+    </section>
+    <div className="balance-strip"><span>Total balance</span><strong>{displayMoney(0)}</strong><button onClick={()=>setHideBalance(!hideBalance)} aria-label="Toggle balance visibility">{hideBalance?<Eye size={17}/>:<EyeOff size={17}/>}</button></div>
+    <section className="actions-section"><h2>Banking Actions</h2><div className="action-grid">
+      <button onClick={()=>go('transfer')}><span><ArrowLeftRight size={23}/></span><b>Transfer</b></button>
+      <button onClick={()=>go('withdraw')}><span><ArrowDownRight size={23}/></span><b>Withdraw</b></button>
+      <button onClick={()=>go('add-money')}><span><Plus size={23}/></span><b>Add money</b></button>
+      <button onClick={()=>go('pay-bills')}><span><FileText size={23}/></span><b>Pay bills</b></button>
+      <button onClick={()=>go('cards')}><span><CreditCard size={23}/></span><b>Cards</b></button>
+      <button onClick={()=>go('scan-pay')}><span><Smartphone size={23}/></span><b>Scan to Pay</b></button>
+    </div></section>
+    <section className="transactions"><div className="section-heading"><h2>Recent Transactions</h2><button onClick={()=>go('transactions')} aria-label="View all transactions"><MoreHorizontal size={20}/></button></div><div className="search"><Search size={18}/><span>Search transactions</span></div><div className="empty"><div className="empty-icon"><Wallet size={22}/></div><div><b>No transactions yet</b><p>Your confirmed transaction history will appear here once secure account services are connected.</p></div></div></section>
   </>;
 }
 function ActionTile({icon:Icon,title,text,onClick}) {return <button className="action-tile" onClick={onClick}><span className="action-icon"><Icon size={21}/></span><span className="action-text"><strong>{title}</strong><small>{text}</small></span><ChevronRight size={17} className="action-chevron"/></button>}
