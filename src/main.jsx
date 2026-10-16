@@ -24,7 +24,7 @@ const usBanks = [
 
 const freshMember = () => ({ id: 'member-1', name: 'AetherBank Member', accountNumber: accountNumber(), checking: 0, savings: 0 });
 const safeLoad = () => {
-  const fallback = { member: freshMember(), members: [], transactions: [], theme: 'light', notifications: true };
+  const fallback = { member: freshMember(), members: [], transactions: [], theme: 'light', notifications: true, emailAddress: '', phoneNumber: '' };
   try {
     const raw = window.localStorage.getItem('aetherbank-state');
     if (!raw) return fallback;
@@ -34,7 +34,7 @@ const safeLoad = () => {
     if (!member.accountNumber) member.accountNumber = accountNumber();
     const members = Array.isArray(base.members) ? base.members.map((m) => ({ ...member, ...m, accountNumber: m?.accountNumber || accountNumber() })) : [];
     const allMembers = members.some((m) => m.id === member.id) ? members : [member, ...members];
-    return { member, members: allMembers, transactions: Array.isArray(base.transactions) ? base.transactions : [], theme: base.theme === 'dark' ? 'dark' : 'light', notifications: base.notifications !== false };
+    return { member, members: allMembers, transactions: Array.isArray(base.transactions) ? base.transactions : [], theme: base.theme === 'dark' ? 'dark' : 'light', notifications: base.notifications !== false, emailAddress: typeof base.emailAddress === 'string' ? base.emailAddress : '', phoneNumber: typeof base.phoneNumber === 'string' ? base.phoneNumber : '' };
   } catch {
     return fallback;
   }
@@ -48,6 +48,8 @@ function App() {
   const [transactions, setTransactions] = useState(initial.transactions);
   const [theme, setTheme] = useState(initial.theme);
   const [notifications, setNotifications] = useState(initial.notifications);
+  const [emailAddress, setEmailAddress] = useState(initial.emailAddress || '');
+  const [phoneNumber, setPhoneNumber] = useState(initial.phoneNumber || '');
   const [page, setPage] = useState('home');
   const [modal, setModal] = useState(null);
   const [drawer, setDrawer] = useState(false);
@@ -59,7 +61,8 @@ function App() {
   const total = member.checking + member.savings;
   const cardSpend = useMemo(() => transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0), [transactions]);
   const show = (value) => hideBalance ? '••••••' : money(value);
-  const save = (m = member, ms = members, tx = transactions, th = theme, notes = notifications) => safeSave({ member: m, members: ms, transactions: tx, theme: th, notifications: notes });
+  const save = (m = member, ms = members, tx = transactions, th = theme, notes = notifications, email = emailAddress, phone = phoneNumber) => safeSave({ member: m, members: ms, transactions: tx, theme: th, notifications: notes, emailAddress: email, phoneNumber: phone });
+  const saveContactDetails = (email, phone) => { setEmailAddress(email); setPhoneNumber(phone); save(member, members, transactions, theme, notifications, email, phone); };
   const flash = (text) => { setMessage(text); window.setTimeout(() => setMessage(''), 2500); };
   const changeTheme = (value) => { setTheme(value); save(member, members, transactions, value, notifications); };
   const changeNotifications = (value) => { setNotifications(value); save(member, members, transactions, theme, value); };
@@ -109,13 +112,13 @@ function App() {
         {page === 'payments' && <Payments open={setModal} transactions={transactions} flash={flash} />}
         {page === 'investments' && <Investments open={setModal} />}
         {page === 'support' && <Support flash={flash} />}
-        {page === 'profile' && <Profile member={member} theme={theme} changeTheme={changeTheme} notifications={notifications} changeNotifications={changeNotifications} open={setModal} />}
+        {page === 'profile' && <Profile member={member} emailAddress={emailAddress} phoneNumber={phoneNumber} theme={theme} changeTheme={changeTheme} notifications={notifications} changeNotifications={changeNotifications} open={setModal} />}
       </main>
 
       <footer className="bottom-nav">{bottomNavigation.map(([key, label, Icon]) => <button key={key} className={(modal === 'cards' ? key === 'cards' : page === key) ? 'active' : ''} onClick={() => { if (key === 'cards') { setModal('cards'); return; } setModal(null); setPage(key); }}><Icon size={21} /><span>{label}</span></button>)}</footer>
 
       {drawer && <Drawer close={() => setDrawer(false)} page={page} setPage={setPage} settings={() => { setDrawer(false); setModal('settings'); }} />}
-      {modal && <Modal type={modal} close={() => setModal(null)} open={setModal} member={member} members={members} addMoney={addMoney} transfer={transfer} debit={debit} register={register} theme={theme} changeTheme={changeTheme} notifications={notifications} changeNotifications={changeNotifications} transactions={transactions} flash={flash} physicalFrozen={physicalFrozen} setPhysicalFrozen={setPhysicalFrozen} globalSearch={globalSearch} setGlobalSearch={setGlobalSearch} />}
+      {modal && <Modal type={modal} close={() => setModal(null)} open={setModal} member={member} members={members} addMoney={addMoney} transfer={transfer} debit={debit} register={register} theme={theme} changeTheme={changeTheme} notifications={notifications} changeNotifications={changeNotifications} transactions={transactions} flash={flash} physicalFrozen={physicalFrozen} setPhysicalFrozen={setPhysicalFrozen} globalSearch={globalSearch} setGlobalSearch={setGlobalSearch} emailAddress={emailAddress} setEmailAddress={setEmailAddress} phoneNumber={phoneNumber} setPhoneNumber={setPhoneNumber} saveContactDetails={saveContactDetails} />}
       {message && <div className="toast"><Check size={17} />{message}</div>}
     </div>
   </div>;
@@ -162,13 +165,13 @@ function Support({ flash }) {
   ];
   return <Page title="Support" subtitle="Guidance for everyday banking and account security."><div className="support-hero"><div className="support-orb"><CircleHelp size={26} /></div><div><b>How can we help?</b><p>Browse common banking questions or reach the support team.</p></div></div><div className="faq-list">{faqs.map(([q,a],i) => <section className={`faq-item ${expanded === i ? 'expanded' : ''}`} key={q}><button className="faq-question" aria-expanded={expanded === i} onClick={() => setExpanded(expanded === i ? -1 : i)}><span>{q}</span><ChevronRight size={18}/></button>{expanded === i && <p className="faq-answer">{a}</p>}</section>)}</div><button className="primary-button" onClick={() => flash('Support request is a preview only. No support agent is connected.')}>Contact Support</button><p className="support-disclaimer">AetherBank is a UI prototype. For real account issues, contact your bank using its official contact details.</p></Page>;
 }
-function Profile({ member, theme, changeTheme, notifications, changeNotifications, open }) {
+function Profile({ member, emailAddress, phoneNumber, theme, changeTheme, notifications, changeNotifications, open }) {
   return <Page title="Profile" subtitle="Your personal details, preferences and account access.">
     <div className="profile-card"><div className="avatar">{(member.name || 'AE').split(/\s+/).slice(0,2).map(part => part[0]).join('').toUpperCase()}</div><div className="profile-identity"><b>{member.name}</b><p>Checking account · ••••{member.accountNumber.slice(-5)}</p></div><ShieldCheck size={20} /></div>
     <section className="profile-section-card"><div className="profile-section-heading"><div><h2>Personal details</h2><p>Contact information and account identity</p></div><button onClick={() => open('settings')}>Edit <ChevronRight size={15}/></button></div>
       <div className="profile-detail-row"><span>Full name</span><b>{member.name}</b></div>
-      <div className="profile-detail-row"><span>Email address</span><button className="inline-action" onClick={() => open('settings')}>Add Email <ChevronRight size={14}/></button></div>
-      <div className="profile-detail-row"><span>Phone number</span><button className="inline-action" onClick={() => open('settings')}>Verify Phone Number <ChevronRight size={14}/></button></div>
+      <div className="profile-detail-row"><span>Email address</span>{emailAddress ? <b>{emailAddress}</b> : <button className="inline-action" onClick={() => open('settings')}>Add Email <ChevronRight size={14}/></button>}</div>
+      <div className="profile-detail-row"><span>Phone number</span>{phoneNumber ? <b>{phoneNumber}</b> : <button className="inline-action" onClick={() => open('settings')}>Verify Phone Number <ChevronRight size={14}/></button>}</div>
     </section>
     <section className="profile-section-card"><div className="profile-section-heading"><div><h2>Preferences</h2><p>Choose how AetherBank appears to you</p></div></div>
       <button className="profile-setting-row" onClick={() => open('settings')}><span className="profile-setting-icon"><Settings size={18}/></span><span className="profile-setting-copy"><b>Account settings</b><small>Security, statements and preferences</small></span><ChevronRight size={18}/></button>
@@ -180,12 +183,10 @@ function Profile({ member, theme, changeTheme, notifications, changeNotification
 }
 function Drawer({ close, setPage, settings }) { return <div className="drawer-backdrop" onClick={close}><aside className="drawer" onClick={e => e.stopPropagation()}><div className="drawer-head"><div className="brand"><span className="brand-mark">AE</span><strong>AetherBank</strong></div><button className="icon-button" aria-label="Close menu" onClick={close}><X size={22} /></button></div><p className="drawer-label">EXPLORE</p>{secondaryNavigation.map(([key, label, Icon]) => <button className="drawer-link" key={key} onClick={() => { setPage(key); close(); }}><Icon size={19} />{label}<ChevronRight size={16} /></button>)}<div className="drawer-demo"><ShieldCheck size={18}/><span><b>Account protected</b><small>Search, notifications and settings are available in the top bar.</small></span></div></aside></div>; }
 
-function Modal({ type, close, open, member, members, addMoney, transfer, debit, register, theme, changeTheme, notifications, changeNotifications, transactions, flash, physicalFrozen, setPhysicalFrozen, globalSearch, setGlobalSearch }) {
+function Modal({ type, close, open, member, members, addMoney, transfer, debit, register, theme, changeTheme, notifications, changeNotifications, transactions, flash, physicalFrozen, setPhysicalFrozen, globalSearch, setGlobalSearch, emailAddress, setEmailAddress, phoneNumber, setPhoneNumber, saveContactDetails }) {
   const [amount, setAmount] = useState(''); const [recipient, setRecipient] = useState(''); const [name, setName] = useState(''); const [payee, setPayee] = useState('Utility bill');
   const [bankSearch, setBankSearch] = useState(''); const [selectedBank, setSelectedBank] = useState(''); const [recipientName, setRecipientName] = useState(''); const [accountLast4, setAccountLast4] = useState(''); const [reviewTransfer, setReviewTransfer] = useState(false);
   const [settingsExpanded, setSettingsExpanded] = useState('');
-  const [emailAddress, setEmailAddress] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [emailEditing, setEmailEditing] = useState(false);
   const [phoneEditing, setPhoneEditing] = useState(false);
   const [twoFactorDetails, setTwoFactorDetails] = useState(false);
@@ -212,9 +213,9 @@ function Modal({ type, close, open, member, members, addMoney, transfer, debit, 
         <div className="settings-detail"><span>Full name</span><b>{member.name}</b></div>
         <div className="settings-detail"><span>Account number</span><b>••••{member.accountNumber.slice(-5)}</b></div>
         <div className="settings-contact-row"><div><b>Email address</b><small>{emailAddress || 'Add an email address to your profile'}</small></div>{emailAddress ? <button className="inline-action" onClick={() => setEmailEditing(!emailEditing)}>Edit</button> : <button className="settings-action-button" onClick={() => setEmailEditing(!emailEditing)}>Add Email</button>}</div>
-        {emailEditing && <form className="settings-inline-form" onSubmit={e => { e.preventDefault(); if (emailAddress.trim()) { setEmailEditing(false); flash('Email details updated.'); } }}><label htmlFor="profile-email">Email address</label><input id="profile-email" className="text-input" type="email" required value={emailAddress} onChange={e => setEmailAddress(e.target.value)} placeholder="you@example.com"/><div className="settings-form-actions"><button type="button" className="secondary-button" onClick={() => setEmailEditing(false)}>Cancel</button><button type="submit" className="settings-action-button">Save email</button></div></form>}
+        {emailEditing && <form className="settings-inline-form" onSubmit={e => { e.preventDefault(); if (emailAddress.trim()) { saveContactDetails(emailAddress.trim(), phoneNumber); setEmailEditing(false); flash('Email details updated.'); } }}><label htmlFor="profile-email">Email address</label><input id="profile-email" className="text-input" type="email" required value={emailAddress} onChange={e => setEmailAddress(e.target.value)} placeholder="you@example.com"/><div className="settings-form-actions"><button type="button" className="secondary-button" onClick={() => setEmailEditing(false)}>Cancel</button><button type="submit" className="settings-action-button">Save email</button></div></form>}
         <div className="settings-contact-row"><div><b>Phone number</b><small>{phoneNumber || 'Add a phone number for account alerts'}</small></div>{phoneNumber ? <button className="inline-action" onClick={() => setPhoneEditing(!phoneEditing)}>Update</button> : <button className="settings-action-button" onClick={() => setPhoneEditing(!phoneEditing)}>Verify Phone Number</button>}</div>
-        {phoneEditing && <form className="settings-inline-form" onSubmit={e => { e.preventDefault(); if (phoneNumber.trim()) { setPhoneEditing(false); flash('Phone number added. Identity verification is still required.'); } }}><label htmlFor="profile-phone">Phone number</label><input id="profile-phone" className="text-input" type="tel" required value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} placeholder="+1 (555) 000-0000"/><div className="settings-form-actions"><button type="button" className="secondary-button" onClick={() => setPhoneEditing(false)}>Cancel</button><button type="submit" className="settings-action-button">Continue</button></div></form>}
+        {phoneEditing && <form className="settings-inline-form" onSubmit={e => { e.preventDefault(); if (phoneNumber.trim()) { saveContactDetails(emailAddress, phoneNumber.trim()); setPhoneEditing(false); flash('Phone number added. Identity verification is still required.'); } }}><label htmlFor="profile-phone">Phone number</label><input id="profile-phone" className="text-input" type="tel" required value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} placeholder="+1 (555) 000-0000"/><div className="settings-form-actions"><button type="button" className="secondary-button" onClick={() => setPhoneEditing(false)}>Cancel</button><button type="submit" className="settings-action-button">Continue</button></div></form>}
       </section>
 
       <section className="settings-group">
