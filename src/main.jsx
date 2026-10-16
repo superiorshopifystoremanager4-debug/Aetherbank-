@@ -181,72 +181,71 @@ function Profile({ member, emailAddress, phoneNumber, theme, changeTheme, notifi
     <section className="profile-security-card"><span className="profile-security-icon"><ShieldCheck size={20}/></span><div><b>Account security</b><p>Review sign-in protection and two-factor authentication in Settings.</p></div><button aria-label="Open security settings" onClick={() => open('settings')}><ChevronRight size={18}/></button></section>
   </Page>;
 }
+
+function SettingsView({ member, emailAddress, setEmailAddress, phoneNumber, setPhoneNumber, saveContactDetails, notifications, changeNotifications, close, flash }) {
+  const [emailEditing, setEmailEditing] = useState(false);
+  const [phoneEditing, setPhoneEditing] = useState(false);
+  const [twoFactorDetails, setTwoFactorDetails] = useState(false);
+  const [paymentsDetails, setPaymentsDetails] = useState(false);
+
+  return <div className="settings-view">
+    <div className="settings-view-header">
+      <div><h1>Settings</h1><p>Manage your preferences, account information, and security.</p></div>
+      <button className="settings-close-button" aria-label="Close settings" onClick={close}><X size={20}/></button>
+    </div>
+
+    <section className="settings-view-card">
+      <h3>Personal Information</h3>
+      <div className="settings-view-rows">
+        <div className="settings-view-row"><span>Full Name</span><b>{member.name}</b></div>
+        <div className="settings-view-row"><span>Account Number</span><b>•••• {member.accountNumber.slice(-5)}</b></div>
+        <div className="settings-view-row"><span>Routing Number</span><b>021000021</b></div>
+        <div className="settings-view-row"><span>Email Address</span>{emailAddress ? <b className="settings-view-value">{emailAddress}</b> : <button className="settings-view-link" onClick={() => setEmailEditing(v => !v)}>+ Add Email</button>}</div>
+        {emailEditing && <form className="settings-view-form" onSubmit={e => { e.preventDefault(); if (emailAddress.trim()) { saveContactDetails(emailAddress.trim(), phoneNumber); setEmailEditing(false); flash('Email address saved.'); } }}><label htmlFor="settings-email">Email Address</label><input id="settings-email" type="email" autoComplete="email" required value={emailAddress} onChange={e => setEmailAddress(e.target.value)} placeholder="you@example.com"/><div><button type="button" className="settings-view-cancel" onClick={() => setEmailEditing(false)}>Cancel</button><button type="submit" className="settings-view-submit">Save Email</button></div></form>}
+        <div className="settings-view-row"><span>Phone Number</span>{phoneNumber ? <b className="settings-view-value">{phoneNumber}</b> : <button className="settings-view-link" onClick={() => setPhoneEditing(v => !v)}>+ Verify Phone</button>}</div>
+        {phoneEditing && <form className="settings-view-form" onSubmit={e => { e.preventDefault(); if (phoneNumber.trim()) { saveContactDetails(emailAddress, phoneNumber.trim()); setPhoneEditing(false); flash('Phone number saved. Verification may still be required.'); } }}><label htmlFor="settings-phone">Phone Number</label><input id="settings-phone" type="tel" autoComplete="tel" required value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} placeholder="+1 (555) 000-0000"/><div><button type="button" className="settings-view-cancel" onClick={() => setPhoneEditing(false)}>Cancel</button><button type="submit" className="settings-view-submit">Save Phone</button></div></form>}
+      </div>
+    </section>
+
+    <section className="settings-view-card">
+      <h3>Security &amp; Controls</h3>
+      <div className="settings-view-actions">
+        <button className="settings-view-action" aria-expanded={twoFactorDetails} onClick={() => setTwoFactorDetails(v => !v)}><span><b>Security &amp; Sign-In</b><small>Password, biometrics, and multi-factor authentication</small></span><span className="settings-view-arrow">{twoFactorDetails ? '−' : '→'}</span></button>
+        {twoFactorDetails && <div className="settings-view-detail"><b>Two-factor authentication</b><p>Review your sign-in protection. Enrollment changes must be completed through a verified banking sign-in process.</p></div>}
+        <button className="settings-view-action" aria-expanded={paymentsDetails} onClick={() => setPaymentsDetails(v => !v)}><span><b>Payments &amp; Limits</b><small>Review daily transfer and ATM limits</small></span><span className="settings-view-arrow">{paymentsDetails ? '−' : '→'}</span></button>
+        {paymentsDetails && <div className="settings-view-detail"><div><span>Daily transfer limit</span><b>$2,500.00</b></div><div><span>ATM withdrawal limit</span><b>$500.00</b></div></div>}
+      </div>
+    </section>
+
+    <section className="settings-view-card">
+      <h3>Notifications</h3>
+      <div className="settings-view-actions">
+        <button className="settings-view-action" role="switch" aria-checked={notifications} onClick={() => changeNotifications(!notifications)}><span><b>Account &amp; Transaction Alerts</b><small>Payment, transfer and account activity notifications</small></span><span className={`settings-view-switch ${notifications ? 'is-on' : ''}`} aria-hidden="true"><i/></span></button>
+      </div>
+    </section>
+
+    <section className="settings-view-card">
+      <h3>Statements &amp; Records</h3>
+      <div className="settings-view-rows">
+        <div className="settings-view-row"><span>Monthly Statements</span><small className="settings-view-unavailable">No statements available</small></div>
+        <div className="settings-view-row"><span>Tax Documents</span><small className="settings-view-unavailable">Not available</small></div>
+      </div>
+    </section>
+  </div>;
+}
+
 function Drawer({ close, setPage, settings }) { return <div className="drawer-backdrop" onClick={close}><aside className="drawer" onClick={e => e.stopPropagation()}><div className="drawer-head"><div className="brand"><span className="brand-mark">AE</span><strong>AetherBank</strong></div><button className="icon-button" aria-label="Close menu" onClick={close}><X size={22} /></button></div><p className="drawer-label">EXPLORE</p>{secondaryNavigation.map(([key, label, Icon]) => <button className="drawer-link" key={key} onClick={() => { setPage(key); close(); }}><Icon size={19} />{label}<ChevronRight size={16} /></button>)}<div className="drawer-demo"><ShieldCheck size={18}/><span><b>Account protected</b><small>Search, notifications and settings are available in the top bar.</small></span></div></aside></div>; }
 
 function Modal({ type, close, open, member, members, addMoney, transfer, debit, register, theme, changeTheme, notifications, changeNotifications, transactions, flash, physicalFrozen, setPhysicalFrozen, globalSearch, setGlobalSearch, emailAddress, setEmailAddress, phoneNumber, setPhoneNumber, saveContactDetails }) {
   const [amount, setAmount] = useState(''); const [recipient, setRecipient] = useState(''); const [name, setName] = useState(''); const [payee, setPayee] = useState('Utility bill');
   const [bankSearch, setBankSearch] = useState(''); const [selectedBank, setSelectedBank] = useState(''); const [recipientName, setRecipientName] = useState(''); const [accountLast4, setAccountLast4] = useState(''); const [reviewTransfer, setReviewTransfer] = useState(false);
-  const [settingsExpanded, setSettingsExpanded] = useState('');
-  const [emailEditing, setEmailEditing] = useState(false);
-  const [phoneEditing, setPhoneEditing] = useState(false);
-  const [twoFactorDetails, setTwoFactorDetails] = useState(false);
   const [cardTab, setCardTab] = useState('virtual');
   const [showVirtualDetails, setShowVirtualDetails] = useState(false);
   const copyValue = async (value, label) => { try { await navigator.clipboard.writeText(value); flash(`${label} copied.`); } catch { flash('Clipboard access is unavailable in this browser.'); } };
-  const [settingsPrefs, setSettingsPrefs] = useState({ currency: 'USD ($)', timezone: 'Eastern Time (ET)', dateFormat: 'MM/DD/YYYY', dailyLimit: '2500', paperless: true, marketing: false });
-  const updateSettings = (key, value) => setSettingsPrefs(current => ({ ...current, [key]: value }));
   const titles = { search: 'Search activity', add: 'Add Money', transfer: 'Transfer to a US bank', withdraw: 'Withdraw', pay: 'Pay Bills', cards: 'Card Management', 'virtual-card-details': 'Virtual Card Details', 'physical-card-details': 'Physical Card Details', 'account-details': 'Account Details', scan: 'Scan to Pay', register: 'Register Member', settings: 'Settings', transactions: 'Transactions', invest: 'Watchlist' };
   const submit = () => { if (type === 'add') addMoney(Number(amount)); else if (type === 'transfer') transfer(Number(amount), recipient); else if (type === 'withdraw') debit(Number(amount), 'ATM withdrawal'); else if (type === 'pay') debit(Number(amount), payee); else if (type === 'scan') debit(Number(amount), 'QR payment'); else if (type === 'register') register(name); };
-  return <div className="modal-backdrop" onClick={close}><section className="modal" onClick={e => e.stopPropagation()}><div className="modal-head"><div><small>AETHERBANK</small><h2>{titles[type]}</h2></div><button className="icon-button" onClick={close}><X size={21} /></button></div>
-    {type === 'settings' && <div className="settings-details">
-      <div className="settings-intro"><div className="settings-icon"><Settings size={22} /></div><div><b>Settings</b><p>Manage your personal details, account access and preferences.</p></div></div>
-
-      <section className="settings-group">
-        <div className="settings-group-title"><ShieldCheck size={19}/><div><b>Account Security &amp; 2FA</b><small>Sign-in protection and account access</small></div></div>
-        <button className="setting-line" onClick={() => setTwoFactorDetails(!twoFactorDetails)}><span className="setting-line-copy"><b>Two-factor authentication</b><small>Extra protection for sign-in</small></span><span className="settings-action-label">{twoFactorDetails ? 'Close' : 'Manage'} <ChevronRight size={15}/></span></button>
-        {twoFactorDetails && <div className="settings-inline-panel"><p>For your security, two-factor authentication enrollment must be completed through your bank’s verified sign-in process.</p></div>}
-        <button className="setting-line" onClick={() => flash('Password changes require a verified sign-in session.')}><span className="setting-line-copy"><b>Password &amp; sign-in</b><small>Review account access</small></span><span className="settings-action-label">Review <ChevronRight size={15}/></span></button>
-      </section>
-
-      <section className="settings-group">
-        <div className="settings-group-title"><User size={19}/><div><b>Personal Details</b><small>Name, email and phone number</small></div></div>
-        <div className="settings-detail"><span>Full name</span><b>{member.name}</b></div>
-        <div className="settings-detail"><span>Account number</span><b>••••{member.accountNumber.slice(-5)}</b></div>
-        <div className="settings-contact-row"><div><b>Email address</b><small>{emailAddress || 'Add an email address to your profile'}</small></div>{emailAddress ? <button className="inline-action" onClick={() => setEmailEditing(!emailEditing)}>Edit</button> : <button className="settings-action-button" onClick={() => setEmailEditing(!emailEditing)}>Add Email</button>}</div>
-        {emailEditing && <form className="settings-inline-form" onSubmit={e => { e.preventDefault(); if (emailAddress.trim()) { saveContactDetails(emailAddress.trim(), phoneNumber); setEmailEditing(false); flash('Email details updated.'); } }}><label htmlFor="profile-email">Email address</label><input id="profile-email" className="text-input" type="email" required value={emailAddress} onChange={e => setEmailAddress(e.target.value)} placeholder="you@example.com"/><div className="settings-form-actions"><button type="button" className="secondary-button" onClick={() => setEmailEditing(false)}>Cancel</button><button type="submit" className="settings-action-button">Save email</button></div></form>}
-        <div className="settings-contact-row"><div><b>Phone number</b><small>{phoneNumber || 'Add a phone number for account alerts'}</small></div>{phoneNumber ? <button className="inline-action" onClick={() => setPhoneEditing(!phoneEditing)}>Update</button> : <button className="settings-action-button" onClick={() => setPhoneEditing(!phoneEditing)}>Verify Phone Number</button>}</div>
-        {phoneEditing && <form className="settings-inline-form" onSubmit={e => { e.preventDefault(); if (phoneNumber.trim()) { saveContactDetails(emailAddress, phoneNumber.trim()); setPhoneEditing(false); flash('Phone number added. Identity verification is still required.'); } }}><label htmlFor="profile-phone">Phone number</label><input id="profile-phone" className="text-input" type="tel" required value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} placeholder="+1 (555) 000-0000"/><div className="settings-form-actions"><button type="button" className="secondary-button" onClick={() => setPhoneEditing(false)}>Cancel</button><button type="submit" className="settings-action-button">Continue</button></div></form>}
-      </section>
-
-      <section className="settings-group">
-        <div className="settings-group-title"><Landmark size={19}/><div><b>Account Details</b><small>Checking account information</small></div></div>
-        <div className="settings-detail"><span>Account type</span><b>Personal checking</b></div><div className="settings-detail"><span>Routing number</span><b>{DEMO_ROUTING_NUMBER}</b></div><div className="settings-detail"><span>Display currency</span><b>USD · US Dollar ($)</b></div>
-      </section>
-
-      <section className="settings-group">
-        <div className="settings-group-title"><FileText size={19}/><div><b>Bank Statements &amp; Tax Documents</b><small>Statements, notices and annual records</small></div></div>
-        <button className="setting-line" onClick={() => flash('There are no statements available to view yet.')}><span className="setting-line-copy"><b>Bank statements</b><small>Monthly account records</small></span><span className="settings-action-label">View <ChevronRight size={15}/></span></button>
-        <button className="setting-line" onClick={() => flash('There are no tax documents available to view yet.')}><span className="setting-line-copy"><b>Tax documents</b><small>Annual tax records</small></span><span className="settings-action-label">View <ChevronRight size={15}/></span></button>
-        <div className="settings-contact-row"><div><b>Paperless statements</b><small>Prefer digital statement delivery</small></div><button className={`switch ${settingsPrefs.paperless ? 'on' : ''}`} role="switch" aria-checked={settingsPrefs.paperless} aria-label="Paperless statements" onClick={() => updateSettings('paperless',!settingsPrefs.paperless)}><i/></button></div>
-      </section>
-
-      <section className="settings-group">
-        <div className="settings-group-title"><Bell size={19}/><div><b>Notifications &amp; Alerts</b><small>Stay informed about account activity</small></div></div>
-        <button className="setting-line" role="switch" aria-checked={notifications} onClick={() => changeNotifications(!notifications)}><span className="setting-line-copy"><b>Account &amp; transaction alerts</b><small>Payments, transfers and account activity</small></span><span className={`switch ${notifications ? 'on' : ''}`} aria-hidden="true"><i/></span></button>
-        <div className="settings-contact-row"><div><b>Product updates</b><small>Occasional news and service updates</small></div><button className={`switch ${settingsPrefs.marketing ? 'on' : ''}`} role="switch" aria-checked={settingsPrefs.marketing} aria-label="Product updates" onClick={() => updateSettings('marketing',!settingsPrefs.marketing)}><i/></button></div>
-      </section>
-
-      <section className="settings-group">
-        <div className="settings-group-title"><Sun size={19}/><div><b>Appearance</b><small>Choose your preferred theme</small></div></div>
-        <div className="theme-toggle settings-theme-toggle"><button className={theme === 'light' ? 'selected' : ''} onClick={() => changeTheme('light')}><Sun size={16}/> Light</button><button className={theme === 'dark' ? 'selected' : ''} onClick={() => changeTheme('dark')}><Moon size={16}/> Dark</button></div>
-      </section>
-
-      <section className="settings-group">
-        <button className="settings-group-title settings-group-button" aria-expanded={settingsExpanded === 'Advanced Preferences'} onClick={() => setSettingsExpanded(settingsExpanded === 'Advanced Preferences' ? '' : 'Advanced Preferences')}><Settings size={19}/><div><b>Advanced Preferences</b><small>Time zone, date format and display options</small></div><ChevronRight size={17}/></button>
-        {settingsExpanded === 'Advanced Preferences' && <div className="settings-extra-grid"><label>Display currency<select value={settingsPrefs.currency} onChange={e => updateSettings('currency',e.target.value)}><option>USD ($)</option><option>EUR (€)</option><option>GBP (£)</option></select></label><label>Time zone<select value={settingsPrefs.timezone} onChange={e => updateSettings('timezone',e.target.value)}><option>Eastern Time (ET)</option><option>Central Time (CT)</option><option>Mountain Time (MT)</option><option>Pacific Time (PT)</option><option>UTC</option></select></label><label>Date format<select value={settingsPrefs.dateFormat} onChange={e => updateSettings('dateFormat',e.target.value)}><option>MM/DD/YYYY</option><option>DD/MM/YYYY</option><option>YYYY-MM-DD</option></select></label></div>}
-      </section>
-      <button className="primary-button" onClick={close}>Done</button>
-    </div>}
+  return <div className="modal-backdrop" onClick={close}><section className={`modal ${type === 'settings' ? 'settings-modal' : ''}`} onClick={e => e.stopPropagation()}>{type !== 'settings' && <div className="modal-head"><div><small>AETHERBANK</small><h2>{titles[type]}</h2></div><button className="icon-button" aria-label="Close dialog" onClick={close}><X size={21} /></button></div>
+    {type === 'settings' && <SettingsView member={member} emailAddress={emailAddress} setEmailAddress={setEmailAddress} phoneNumber={phoneNumber} setPhoneNumber={setPhoneNumber} saveContactDetails={saveContactDetails} notifications={notifications} changeNotifications={changeNotifications} close={close} flash={flash} />}
     {type === 'register' && <><label>Member name</label><input className="text-input" autoFocus value={name} onChange={e => setName(e.target.value)} placeholder="Full legal name" /><p className="modal-copy">A unique account number will be issued to every registered AetherBank member.</p><button className="primary-button" onClick={submit}>Create Account</button></>}
     {type === 'transfer' && <>
       {!reviewTransfer ? <>
