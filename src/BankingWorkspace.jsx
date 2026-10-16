@@ -76,7 +76,7 @@ function BankingWorkspace() {
         {page === 'notifications' && <GenericPage icon={Bell} title="Notifications" subtitle="Review the notification centre and delivery preferences." items={['Account activity alerts','Security and sign-in notices','Product updates and service messages']} flash={flash}/>}
         {page === 'pay-bills' && <GenericPage icon={FileText} title="Pay bills" subtitle="Explore bill-payment categories and the review flow. No payment will be sent." items={['Utilities and electricity','Airtime and mobile data','TV and internet subscriptions','Bill reference validation and payment review']} flash={flash}/>}
         {page === 'scan-pay' && <GenericPage icon={Smartphone} title="Scan to Pay" subtitle="Preview QR payment options. Camera and live payment processing are not connected." items={['QR code payment overview','Merchant details and amount review','Payment confirmation and receipt preview']} flash={flash}/>}
-        {page === 'support' && <Support flash={flash}/>
+        {page === 'support' && <Support flash={flash}/>}
       </main>
       <nav className="mobile-bottom-nav" aria-label="Primary navigation">
         {[
