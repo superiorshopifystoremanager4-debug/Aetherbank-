@@ -231,7 +231,7 @@ function Modal({ type, close, open, member, members, addMoney, transfer, debit, 
 
       <section className="settings-group">
         <div className="settings-group-title"><Bell size={19}/><div><b>Notifications &amp; Alerts</b><small>Stay informed about account activity</small></div></div>
-        <button className="setting-line" onClick={() => changeNotifications(!notifications)}><span className="setting-line-copy"><b>Account &amp; transaction alerts</b><small>Payments, transfers and account activity</small></span><button className={`switch ${notifications ? 'on' : ''}`} role="switch" aria-checked={notifications} aria-label="Account and transaction alerts" onClick={e => { e.stopPropagation(); changeNotifications(!notifications); }}><i/></button></button>
+        <button className="setting-line" role="switch" aria-checked={notifications} onClick={() => changeNotifications(!notifications)}><span className="setting-line-copy"><b>Account &amp; transaction alerts</b><small>Payments, transfers and account activity</small></span><span className={`switch ${notifications ? 'on' : ''}`} aria-hidden="true"><i/></span></button>
         <div className="settings-contact-row"><div><b>Product updates</b><small>Occasional news and service updates</small></div><button className={`switch ${settingsPrefs.marketing ? 'on' : ''}`} role="switch" aria-checked={settingsPrefs.marketing} aria-label="Product updates" onClick={() => updateSettings('marketing',!settingsPrefs.marketing)}><i/></button></div>
       </section>
 
