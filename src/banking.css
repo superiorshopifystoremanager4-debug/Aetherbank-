@@ -116,3 +116,20 @@ input,select,textarea{accent-color:#b79b57}
   .service-notice{background:#fffefa}
   .mobile-bottom-nav button{font-size:9px}
 }
+
+
+/* Interactive sandbox form controls */
+.workflow-fields{display:grid;gap:16px;margin-top:22px}
+.field-label{display:grid;gap:8px;color:#4d5858;font-size:12px;font-weight:700}
+.field-label .text-input{width:100%;min-height:44px;padding:12px 13px;border:1px solid #e1dfd5;border-radius:10px;background:#fffefa;color:#263233;outline:none}
+.field-label .text-input:focus{border-color:#b79b57;box-shadow:0 0 0 3px rgba(183,155,87,.12)}
+.workflow-fields>.button-primary,.feature-placeholder>.button-primary{justify-self:start;margin-top:4px;min-height:43px;padding:0 17px}
+.sandbox-confirm{display:flex;align-items:flex-start;gap:9px;margin:17px 0;color:#626b66;font-size:12px;line-height:1.55}
+.sandbox-confirm input{margin-top:3px;accent-color:#b79b57}
+.button-row{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:17px}
+.button-row .button-primary,.button-row .button-secondary{min-height:42px}
+.method-card-button{width:100%;text-align:left;font:inherit;cursor:pointer}
+.method-card-button:hover,.method-card-selected{border-color:#c8b274!important;background:#faf6e9!important}
+.method-card-button .status-badge{margin-top:8px}
+.workflow-aside .generic-row{padding:11px 0}
+@media(max-width:560px){.button-row{justify-content:stretch}.button-row>*{flex:1}.workflow-fields{gap:13px}.field-label{font-size:11px}}
