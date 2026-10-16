@@ -103,3 +103,15 @@ button { border: 0; cursor: pointer; }
 .settings-check-row b{display:block;font-size:12px}.settings-check-row small{display:block;margin-top:4px;font-size:11px;color:#7c8a82;line-height:1.5}
 .settings-check-row input[type=checkbox]{width:17px;height:17px;accent-color:#285a43;flex:0 0 auto}
 @media(max-width:480px){.settings-extra-grid{grid-template-columns:1fr}.settings-extra-grid .settings-footnote{grid-column:1}}
+
+
+/* Step 2 — searchable US bank selection and transfer review */
+.bank-flow-note{display:flex;align-items:flex-start;gap:10px;padding:13px;border-radius:14px;background:var(--surface-2);color:var(--accent);margin-bottom:16px}
+.bank-flow-note span{display:block;min-width:0}.bank-flow-note b{display:block;color:var(--text);font-size:12px}.bank-flow-note small{display:block;color:var(--muted);font-size:11px;line-height:1.5;margin-top:4px}
+.bank-search-field{position:relative;margin:7px 0 10px}.bank-search-field>svg{position:absolute;left:13px;top:15px;color:var(--muted);z-index:1}.bank-search-field .text-input{padding-left:39px}
+.bank-list{display:grid;gap:7px;max-height:220px;overflow:auto;margin-bottom:15px;padding:1px}
+.bank-option{width:100%;display:flex;align-items:center;gap:11px;text-align:left;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text)}
+.bank-option.selected{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+.bank-monogram{width:37px;height:37px;flex:0 0 auto;display:grid;place-items:center;border-radius:11px;background:var(--surface-2);color:var(--accent);font-size:11px;font-weight:700}
+.bank-option>span:nth-child(2){flex:1;min-width:0}.bank-option b{display:block;font-size:12px}.bank-option small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.bank-radio{width:20px;height:20px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;font-size:12px;color:var(--accent)}.bank-option.selected .bank-radio{border-color:var(--accent);font-weight:700}
+.review-badge{display:flex;align-items:center;gap:9px;color:var(--accent);margin-bottom:13px}.review-badge b{color:var(--text);font-size:14px}.bank-review-card{border:1px solid var(--line);border-radius:15px;padding:0 14px;margin:12px 0;background:var(--surface)}.bank-review-card .info-row{gap:15px}.bank-review-card .info-row span{color:var(--muted)}.bank-review-card .info-row b{text-align:right;max-width:58%;overflow-wrap:anywhere}.secondary-button{width:100%;min-height:46px;margin-top:9px;border:1px solid var(--line);border-radius:14px;background:transparent;color:var(--text);font-weight:600}
