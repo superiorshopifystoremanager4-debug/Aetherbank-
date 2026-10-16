@@ -91,6 +91,7 @@ function BankingWorkspace() {
       {notice && <div className="toast"><Check size={17}/>{notice}</div>}
     </div>
   </div>;
+}
 
 function PageHeader({eyebrow='YOUR MONEY, IN CONTROL', title, subtitle, action}) { return <div className="page-heading"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1><p>{subtitle}</p></div>{action}</div>; }
 function StatusBadge({children, tone='neutral'}) { return <span className={`status-badge status-${tone}`}><i/>{children}</span>; }
