@@ -1,7 +1,6 @@
 -- AetherBank PostgreSQL foundation
--- All monetary values are integer minor units (kobo/cents), never floating point.
--- This schema is a foundation; do not connect it to live funds until security,
--- regulatory, reconciliation, and banking-partner reviews are complete.
+-- All monetary values are integer minor units (cents), never floating point.
+-- This schema is the ledger foundation for the U.S. personal banking product.
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
@@ -20,7 +19,8 @@ CREATE TABLE IF NOT EXISTS bank_accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_id UUID NOT NULL REFERENCES customers(id),
   account_number CHAR(10) NOT NULL UNIQUE,
-  currency CHAR(3) NOT NULL DEFAULT 'NGN',
+  routing_number CHAR(9),
+  currency CHAR(3) NOT NULL DEFAULT 'USD',
   account_type TEXT NOT NULL DEFAULT 'checking'
     CHECK (account_type IN ('checking', 'savings')),
   status TEXT NOT NULL DEFAULT 'pending'
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS ledger_transactions (
     CHECK (transaction_type IN ('deposit', 'withdrawal', 'transfer', 'fee', 'reversal', 'adjustment')),
   status TEXT NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'posted', 'failed', 'reversed')),
-  currency CHAR(3) NOT NULL DEFAULT 'NGN',
+  currency CHAR(3) NOT NULL DEFAULT 'USD',
   description TEXT NOT NULL,
   reference TEXT UNIQUE,
   created_by UUID REFERENCES customers(id),
@@ -77,6 +77,7 @@ CREATE OR REPLACE VIEW account_balances AS
 SELECT a.id AS account_id,
        a.customer_id,
        a.account_number,
+       a.routing_number,
        a.currency,
        a.account_type,
        a.status,
@@ -84,7 +85,7 @@ SELECT a.id AS account_id,
 FROM bank_accounts a
 LEFT JOIN ledger_entries e ON e.account_id = a.id AND e.currency = a.currency
 LEFT JOIN ledger_transactions t ON t.id = e.transaction_id
-GROUP BY a.id, a.customer_id, a.account_number, a.currency, a.account_type, a.status;
+GROUP BY a.id, a.customer_id, a.account_number, a.routing_number, a.currency, a.account_type, a.status;
 
 -- Posting requirements for the service layer:
 -- 1. Use a single SERIALIZABLE database transaction and lock affected accounts.
