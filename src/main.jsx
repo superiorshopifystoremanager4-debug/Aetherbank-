@@ -8,11 +8,11 @@ import {
 } from 'lucide-react';
 import './styles.css';
 
-const money = (n) => `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const money = (n) => '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const accountNumber = () => String(Math.floor(1000000000 + Math.random() * 8999999999));
 const CARD_NUMBER = '5312448899003711';
 const ROUTING_NUMBER = '021000021';
-const id = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+const id = () => Date.now() + '-' + Math.random().toString(36).slice(2);
 
 const bottomNavigation = [
   ['home', 'Home', HomeIcon],
@@ -28,7 +28,6 @@ const quickActions = [
   ['cards', 'Cards', CreditCard],
 ];
 
-// Starting balances for testing — $1000 checking so transfers of $20/$200/$300+ work
 const freshMember = () => ({
   id: 'member-1',
   name: 'Jacob Joshua',
@@ -67,9 +66,7 @@ const safeLoad = () => {
       member.savings = 250;
     }
     let members = Array.isArray(base.members) ? base.members : [];
-    if (members.length < 2) {
-      members = [member, secondMember()];
-    }
+    if (members.length < 2) members = [member, secondMember()];
     const allMembers = members.some((m) => m.id === member.id) ? members : [member, ...members];
     return {
       member,
@@ -86,9 +83,7 @@ const safeLoad = () => {
 };
 
 const safeSave = (state) => {
-  try {
-    window.localStorage.setItem('aetherbank-state', JSON.stringify(state));
-  } catch {}
+  try { window.localStorage.setItem('aetherbank-state', JSON.stringify(state)); } catch {}
 };
 
 function App() {
@@ -132,7 +127,7 @@ function App() {
     const tx = { id: id(), merchant: 'Account funding', note: 'Checking deposit', amount, date: 'Just now', status: 'Completed' };
     const txs = [tx, ...transactions];
     setMember(next); setTransactions(txs); save(next, members, txs); setModal(null);
-    flash(`${money(amount)} added to Checking.`);
+    flash(money(amount) + ' added to Checking.');
   };
 
   const transfer = (amount, recipientNumber) => {
@@ -140,39 +135,39 @@ function App() {
     const recipient = members.find((m) => m.accountNumber === recipientNumber && m.id !== member.id);
     if (!(value > 0)) return flash('Enter a valid transfer amount.');
     if (!recipient) return flash('Recipient account was not found.');
-    if (value > member.checking) return flash(`Transfer declined — available balance is ${money(member.checking)}.`);
+    if (value > member.checking) return flash('Transfer declined — available balance is ' + money(member.checking) + '.');
     const nextMember = { ...member, checking: member.checking - value };
     const nextRecipient = { ...recipient, checking: recipient.checking + value };
     const nextMembers = members.map((m) => m.id === member.id ? nextMember : m.id === recipient.id ? nextRecipient : m);
-    const txs = [{ id: id(), merchant: recipient.name, note: `Transfer to ••••${recipient.accountNumber.slice(-4)}`, amount: -value, date: 'Just now', status: 'Completed' }, ...transactions];
+    const txs = [{ id: id(), merchant: recipient.name, note: 'Transfer to ••••' + recipient.accountNumber.slice(-4), amount: -value, date: 'Just now', status: 'Completed' }, ...transactions];
     setMember(nextMember); setMembers(nextMembers); setTransactions(txs); save(nextMember, nextMembers, txs); setModal(null);
-    flash(`Transfer of ${money(value)} completed.`);
+    flash('Transfer of ' + money(value) + ' completed.');
   };
 
   const transferToSavings = (amount) => {
     const value = Number(amount);
     if (!(value > 0)) return flash('Enter a valid amount.');
-    if (value > member.checking) return flash(`Insufficient funds. Available: ${money(member.checking)}.`);
+    if (value > member.checking) return flash('Insufficient funds. Available: ' + money(member.checking) + '.');
     const next = { ...member, checking: member.checking - value, savings: member.savings + value };
     const txs = [{ id: id(), merchant: 'Internal transfer', note: 'Checking → Savings', amount: -value, date: 'Just now', status: 'Completed' }, ...transactions];
     setMember(next); setTransactions(txs); save(next, members, txs); setModal(null);
-    flash(`${money(value)} moved to Savings.`);
+    flash(money(value) + ' moved to Savings.');
   };
 
   const withdraw = (amount) => {
     const value = Number(amount);
     if (!(value > 0)) return flash('Enter a valid amount.');
-    if (value > member.checking) return flash(`Insufficient funds. Available: ${money(member.checking)}.`);
+    if (value > member.checking) return flash('Insufficient funds. Available: ' + money(member.checking) + '.');
     const next = { ...member, checking: member.checking - value };
     const txs = [{ id: id(), merchant: 'Withdrawal', note: 'Cash / external withdrawal', amount: -value, date: 'Just now', status: 'Completed' }, ...transactions];
     setMember(next); setTransactions(txs); save(next, members, txs); setModal(null);
-    flash(`Withdrawal of ${money(value)} completed.`);
+    flash('Withdrawal of ' + money(value) + ' completed.');
   };
 
   const debit = (amount, merchant) => {
     const value = Number(amount);
     if (!(value > 0)) return flash('Enter a valid amount.');
-    if (value > member.checking) return flash(`Payment declined — available balance is ${money(member.checking)}.`);
+    if (value > member.checking) return flash('Payment declined — available balance is ' + money(member.checking) + '.');
     const next = { ...member, checking: member.checking - value };
     const txs = [{ id: id(), merchant, note: 'Account payment', amount: -value, date: 'Just now', status: 'Completed' }, ...transactions];
     setMember(next); setTransactions(txs); save(next, members, txs); setModal(null);
@@ -180,7 +175,7 @@ function App() {
   };
 
   return (
-    <div className={\`app \${theme}\`}>
+    <div className={'app ' + theme}>
       <div className="phone-shell">
         <header className="topbar">
           <button className="icon-button" aria-label="Open menu" onClick={() => setDrawer(true)}><Menu size={22} /></button>
@@ -196,7 +191,7 @@ function App() {
           {page === 'payments' && <Payments open={setModal} transactions={transactions} />}
           {page === 'investments' && <Investments />}
           {page === 'support' && <Support flash={flash} />}
-          {page === 'profile' && <Profile member={member} emailAddress={emailAddress} phoneNumber={phoneNumber} theme={theme} changeTheme={changeTheme} notifications={notifications} changeNotifications={changeNotifications} open={setModal} />}
+          {page === 'profile' && <Profile member={member} emailAddress={emailAddress} phoneNumber={phoneNumber} theme={theme} changeTheme={changeTheme} notifications={notifications} changeNotifications={changeNotifications} />}
         </main>
         <footer className="bottom-nav">
           {bottomNavigation.map(([key, label, Icon]) => (
@@ -207,7 +202,7 @@ function App() {
         </footer>
         {drawer && <Drawer close={() => setDrawer(false)} page={page} setPage={setPage} settings={() => { setDrawer(false); setModal('settings'); }} />}
         {modal && (
-          <Modal type={modal} close={() => setModal(null)} open={setModal} member={member} members={members} addMoney={addMoney} transfer={transfer} transferToSavings={transferToSavings} withdraw={withdraw} debit={debit} theme={theme} changeTheme={changeTheme} notifications={notifications} changeNotifications={changeNotifications} transactions={transactions} flash={flash} physicalFrozen={physicalFrozen} setPhysicalFrozen={setPhysicalFrozen} globalSearch={globalSearch} setGlobalSearch={setGlobalSearch} />
+          <Modal type={modal} close={() => setModal(null)} member={member} members={members} addMoney={addMoney} transfer={transfer} transferToSavings={transferToSavings} withdraw={withdraw} debit={debit} theme={theme} changeTheme={changeTheme} notifications={notifications} changeNotifications={changeNotifications} transactions={transactions} flash={flash} physicalFrozen={physicalFrozen} setPhysicalFrozen={setPhysicalFrozen} globalSearch={globalSearch} setGlobalSearch={setGlobalSearch} />
         )}
         {message && <div className="toast"><Check size={17} />{message}</div>}
       </div>
@@ -236,7 +231,7 @@ function Home({ member, show, total, hideBalance, setHideBalance, cardSpend, tra
             <div className="mini-brand"><span>AE</span>AetherBank</div><div className="chip" /><div className="contactless">⌁</div>
             <div className="card-name">{member.name}</div><div className="last-four">•••• {CARD_NUMBER.slice(-4)}</div><div className="card-dots"><i /><i /></div>
           </button>
-          <div className="spend"><span>Recent card spend</span><b>{show(cardSpend)}</b><div className="progress"><i style={{ width: `${Math.min(100, cardSpend / 30)}%` }} /></div><small>Checking available: {show(member.checking)}</small></div>
+          <div className="spend"><span>Recent card spend</span><b>{show(cardSpend)}</b><div className="progress"><i style={{ width: Math.min(100, cardSpend / 30) + '%' }} /></div><small>Checking available: {show(member.checking)}</small></div>
         </div>
         <p className="card-note">AetherBank Debit Card</p>
       </section>
@@ -257,17 +252,17 @@ function Home({ member, show, total, hideBalance, setHideBalance, cardSpend, tra
 
 function Transaction({ item }) {
   const positive = item.amount > 0;
-  const label = `${item.merchant || ''} ${item.note || ''}`.toLowerCase();
+  const label = ((item.merchant || '') + ' ' + (item.note || '')).toLowerCase();
   const Icon = /transfer|account funding|deposit|payroll|salary/.test(label) ? Landmark : /grocery|market|shop|store|retail/.test(label) ? ShoppingBag : /cafe|coffee|restaurant|food|dining/.test(label) ? Utensils : /electric|utility|bill|power/.test(label) ? Zap : /atm|withdraw|cash/.test(label) ? CircleDollarSign : CreditCard;
   const status = item.status === 'pending' ? 'Pending' : 'Completed';
   return (
     <div className="transaction">
-      <div className={\`merchant-icon \${positive ? 'positive' : ''}\`}><Icon size={18} /></div>
+      <div className={'merchant-icon ' + (positive ? 'positive' : '')}><Icon size={18} /></div>
       <div className="transaction-copy">
-        <div className="transaction-title-row"><b>{item.merchant || 'Account activity'}</b><span className={\`transaction-status \${status.toLowerCase()}\`}>{status}</span></div>
-        <span className="transaction-meta">{item.note || (positive ? 'Incoming credit' : 'Card payment')} <i>·</i> <Clock3 size={11} />{item.date || 'Date unavailable'}</span>
+        <div className="transaction-title-row"><b>{item.merchant || 'Account activity'}</b><span className={'transaction-status ' + status.toLowerCase()}>{status}</span></div>
+        <span className="transaction-meta">{item.note || (positive ? 'Incoming credit' : 'Card payment')} · {item.date || 'Date unavailable'}</span>
       </div>
-      <strong className={\`transaction-amount \${positive ? 'positive-text' : ''}\`}>{positive ? '+' : '−'}{money(Math.abs(item.amount))}</strong>
+      <strong className={'transaction-amount ' + (positive ? 'positive-text' : '')}>{positive ? '+' : '−'}{money(Math.abs(item.amount))}</strong>
     </div>
   );
 }
@@ -312,15 +307,15 @@ function Support({ flash }) {
   const [expanded, setExpanded] = useState(0);
   const faqs = [
     ['How do internal and wire transfers work?', 'Internal transfers between accounts at the same institution are usually processed quickly. Wire transfers move through banking networks and may have fees, cut-off times, and additional verification.'],
-    ['What are my daily transaction and ATM limits?', 'Daily purchase, transfer, and ATM limits vary by account and card. Check your account agreement or contact support. You can also review limits in Security center.'],
+    ['What are my daily transaction and ATM limits?', 'Daily purchase, transfer, and ATM limits vary by account and card. Check your account agreement or contact support.'],
     ['How do I lock or report a lost card?', 'Use Freeze card in the Cards section to immediately block new purchases and ATM withdrawals, then contact support to report it and request a replacement.'],
-    ['When do direct deposits post?', 'Posting time depends on when the sender submits the payment and the receiving bank’s processing schedule. Ask your payroll provider for deposit-specific timing.'],
+    ['When do direct deposits post?', 'Posting time depends on when the sender submits the payment and the receiving bank processing schedule.'],
   ];
   return (
     <Page title="Support" subtitle="Guidance for everyday banking and account security.">
       <div className="support-hero"><div className="support-orb"><CircleHelp size={26} /></div><div><b>How can we help?</b><p>Browse common banking questions or reach the support team.</p></div></div>
       <div className="faq-list">{faqs.map(([q, a], i) => (
-        <section className={\`faq-item \${expanded === i ? 'expanded' : ''}\`} key={q}>
+        <section className={'faq-item ' + (expanded === i ? 'expanded' : '')} key={q}>
           <button className="faq-question" aria-expanded={expanded === i} onClick={() => setExpanded(expanded === i ? -1 : i)}><span>{q}</span><ChevronRight size={18} /></button>
           {expanded === i && <p className="faq-answer">{a}</p>}
         </section>
@@ -401,7 +396,7 @@ function Modal({ type, close, member, members, addMoney, transfer, transferToSav
               <label>Amount<input type="number" min="0.01" step="0.01" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} /></label>
               <p className="modal-section">Send to another member</p>
               {otherMembers.length === 0 ? <p>No other members available.</p> : otherMembers.map((m) => (
-                <button key={m.id} className={\`recipient-option \${recipient === m.accountNumber ? 'selected' : ''}\`} onClick={() => setRecipient(m.accountNumber)}>
+                <button key={m.id} className={'recipient-option ' + (recipient === m.accountNumber ? 'selected' : '')} onClick={() => setRecipient(m.accountNumber)}>
                   <b>{m.name}</b><small>••••{m.accountNumber.slice(-4)}</small>
                 </button>
               ))}
@@ -446,7 +441,7 @@ function Modal({ type, close, member, members, addMoney, transfer, transferToSav
               <div className="detail-row"><span>Routing number</span><b>{ROUTING_NUMBER}</b></div>
               <div className="detail-row"><span>Account type</span><b>Checking</b></div>
               <div className="detail-row"><span>Status</span><b>Active · Member FDIC</b></div>
-              <button className="primary-button" onClick={() => { navigator.clipboard?.writeText(`${member.accountNumber}`); flash('Account number copied.'); }}><Copy size={16} /> Copy account number</button>
+              <button className="primary-button" onClick={() => { navigator.clipboard && navigator.clipboard.writeText(member.accountNumber); flash('Account number copied.'); }}>Copy account number</button>
             </>
           )}
           {type === 'transactions' && (
@@ -467,7 +462,7 @@ function Modal({ type, close, member, members, addMoney, transfer, transferToSav
           {type === 'search' && (
             <>
               <input type="search" placeholder="Search transactions..." value={globalSearch} onChange={(e) => setGlobalSearch(e.target.value)} autoFocus />
-              {transactions.filter((t) => !globalSearch || (t.merchant || '').toLowerCase().includes(globalSearch.toLowerCase()) || (t.note || '').toLowerCase().includes(globalSearch.toLowerCase())).map((t) => <Transaction key={t.id} item={t} />)}
+              {transactions.filter((t) => !globalSearch || ((t.merchant || '') + ' ' + (t.note || '')).toLowerCase().includes(globalSearch.toLowerCase())).map((t) => <Transaction key={t.id} item={t} />)}
             </>
           )}
           {type === 'scan' && (
