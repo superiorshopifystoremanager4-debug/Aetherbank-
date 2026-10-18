@@ -1,0 +1,33 @@
+name: Card separation
+on:
+  push:
+    paths:
+      - .github/workflows/card-separation.yml
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update card identifiers
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/main.jsx')
+          s = p.read_text()
+          s = s.replace("const DEMO_CARD_NUMBER = '5312448899003711';", "const VIRTUAL_CARD_NUMBER = '5312448899003711';\nconst PHYSICAL_CARD_NUMBER = '5312448899008842';")
+          s = s.replace('DEMO_CARD_NUMBER.slice(-4)', 'VIRTUAL_CARD_NUMBER.slice(-4)', 1)
+          s = s.replace('DEMO_CARD_NUMBER.slice(-4)', 'PHYSICAL_CARD_NUMBER.slice(-4)', 1)
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add src/main.jsx
+          git commit -m "fix: separate virtual and physical card numbers"
+          git push
+      - name: Remove workflow
+        run: |
+          git rm .github/workflows/card-separation.yml
+          git commit -m "chore: remove one-time card workflow"
+          git push
